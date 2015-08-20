@@ -8,5 +8,5 @@ Current examples programs:
 * `rm`: Rate Monotonic scheduling.
 * `ss`: Rate Monotonic scheduling with Slack Stealing method.
 
-Edit the Makefile to choose which example project build. 
+Edit the root `Makefile` to choose which example project build. 
 
