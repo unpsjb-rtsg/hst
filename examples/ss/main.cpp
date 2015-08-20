@@ -198,6 +198,7 @@ void vSchedulerNegativeSlackHook( TickType_t xTickCount, BaseType_t xSlack )
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
+	pc.printf("Rate Monotonic + Slack Stealing\nNow, shall we begin? :-) \n");
 	pc.printf( "\nSetup -- %d\t -- \t%d\t", xTaskGetTickCount(), xAvailableSlack );
 
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
