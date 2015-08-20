@@ -4,12 +4,11 @@
 ###############################################################################
 # Scheduler type:
 # - rm: Rate Monotonic
-# - dm: Deadline Monotonic
 # - edf: Earliest Deadline First
 # - dp: Dual Priority
 # - ss: Slack Stealing
 #
-HST_SCHED ?= ss
+HST_SCHED ?= dp
 
 BIN_DIR = out
 
