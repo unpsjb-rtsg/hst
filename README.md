@@ -1,2 +1,2 @@
 # hst -- Heterogeneous Scheduling Task
-FreeRTOS User Mode Scheduler
+A User Mode Scheduler for FreeRTOS.
