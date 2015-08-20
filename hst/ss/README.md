@@ -1,3 +1,5 @@
+# RM + Slack Stealing scheduler
+
 Implementación de la política de planificación Rate Monotonic (RM) con Slack
 Stealing (SS) para la administración del tiempo ocioso.
 
