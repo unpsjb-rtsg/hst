@@ -45,10 +45,10 @@ int main() {
 	vSchedulerSetup();
 
 	/* Create the application scheduled tasks. */
-	xSchedulerTaskCreate( task_body, "T03", 256, NULL, 2, NULL, 6000, 6000, 1000 );
+	xSchedulerTaskCreate( task_body, "T01", 256, NULL, 0, NULL, 3000, 3000, 1000 );
 	xSchedulerTaskCreate( task_body, "T02", 256, NULL, 1, NULL, 4000, 4000, 1000 );
-    xSchedulerTaskCreate( task_body, "T01", 256, NULL, 0, NULL, 3000, 3000, 1000 );
-    xSchedulerTaskCreate( task_body, "T04", 256, NULL, 3, NULL, 12000, 12000, 1000 );
+	xSchedulerTaskCreate( task_body, "T03", 256, NULL, 2, NULL, 6000, 6000, 1000 );
+	xSchedulerTaskCreate( task_body, "T04", 256, NULL, 3, NULL, 12000, 12000, 1000 );
 
     /* Aperiodic task */
     xSchedulerAperiodicTaskCreate( aperiodic_task_body, "T1A", 256, NULL, NULL );
@@ -175,6 +175,7 @@ extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
+	pc.printf( "Dual Priority\nNow, shall we begin? :-) \n" );
 	pc.printf( "Setup -- %d --", xTaskGetTickCount() );
 
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
