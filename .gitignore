@@ -1,5 +1,7 @@
 .RData
 .RHistory
+.project
+.cproject
 
 *.zip
 *.tar.gz
