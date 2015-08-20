@@ -7,5 +7,6 @@ Current examples programs:
 * `edf`: Earliest Deadline First scheduling.
 * `rm`: Rate Monotonic scheduling.
 * `ss`: Rate Monotonic scheduling with Slack Stealing method.
- 
+
+Edit the Makefile to choose which example project build. 
 
