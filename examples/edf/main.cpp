@@ -129,6 +129,6 @@ extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
-	pc.printf("RM\nNow, shall we begin? :-) \n");
+	pc.printf("Earliest Deadline First (EDF)\nNow, shall we begin? :-) \n");
 }
 #endif
