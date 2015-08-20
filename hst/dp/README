@@ -1,0 +1,5 @@
+Implementación de la política de planificación Dual Priority [1].
+
+[1]: Davis, R.; Wellings, A., "Dual priority scheduling," Real-Time Systems 
+     Symposium, 1995. Proceedings., 16th IEEE , vol., no., pp.100,109, 
+     5-7 Dec 1995

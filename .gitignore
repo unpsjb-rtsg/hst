@@ -1,0 +1,17 @@
+.RData
+.RHistory
+
+*.zip
+*.tar.gz
+*.pdf
+
+*.o
+*.d
+*.bin
+*.elf
+*.a
+*.xml
+*.swp
+
+mbed/**
+**/mbed/**
