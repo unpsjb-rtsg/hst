@@ -18,8 +18,8 @@ GCC_BIN =
 PROJECT = hst
 FREERTOS_OBJECTS = ./FreeRTOS/tasks.o ./FreeRTOS/queue.o ./FreeRTOS/list.o ./FreeRTOS/portable/MemMang/heap_1.o ./FreeRTOS/portable/GCC/ARM_CM3/port.o
 HST_OBJECTS = ./hst/$(HST_SCHED)/scheduler_logic_$(HST_SCHED).o ./hst/scheduler.o ./hst/utils.o ./hst/wcrt.o
-TEST_OBJECTS = ./test/$(HST_SCHED)/main.o
-OBJECTS = $(FREERTOS_OBJECTS) $(HST_OBJECTS) $(TEST_OBJECTS)
+EXAMPLE_OBJECTS = ./example/$(HST_SCHED)/main.o
+OBJECTS = $(FREERTOS_OBJECTS) $(HST_OBJECTS) $(EXAMPLE_OBJECTS)
 SYS_OBJECTS = ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o 
 FREERTOS_INCLUDE_PATHS =  -I./FreeRTOS/include -I./FreeRTOS/portable/GCC/ARM_CM3 -I./FreeRTOS/config
 HST_INCLUDE_PATHS = -I./hst -I./hst/$(HST_SCHED)
@@ -76,11 +76,6 @@ clean:
 
 $(BIN_DIR)/$(PROJECT).elf: $(OBJECTS) $(SYS_OBJECTS)
 	$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(LIBRARIES) $(LD_SYS_LIBS)
-	@echo ""
-	@echo "*****"
-	@echo "***** You must modify vector checksum value in *.bin and *.hex files."
-	@echo "*****"
-	@echo ""
 	$(SIZE) $@
 
 $(BIN_DIR)/$(PROJECT).bin: $(BIN_DIR)/$(PROJECT).elf
