@@ -11,6 +11,8 @@
 #
 HST_SCHED ?= ss
 
+BIN_DIR = out
+
 ###############################################################################
 GCC_BIN = 
 PROJECT = hst
@@ -46,7 +48,7 @@ CC_SYMBOLS = -DTARGET_LPC1768 -DTARGET_M3 -DTARGET_CORTEX_M -DTARGET_NXP -DTARGE
 
 LD_FLAGS = $(CPU) -Wl,--gc-sections --specs=nano.specs -u _printf_float -u _scanf_float
 
-LD_FLAGS += -Wl,-Map=$(PROJECT).map,--cref
+LD_FLAGS += -Wl,-Map=$(BIN_DIR)/$(PROJECT).map,--cref
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 ifeq ($(DEBUG), 1)
@@ -55,10 +57,12 @@ else
   CC_FLAGS += -DNDEBUG -Os
 endif
 
-all: $(PROJECT).bin $(PROJECT).hex 
+LIST = $(BIN_DIR)/$(PROJECT).bin $(BIN_DIR)/$(PROJECT).hex
+
+all: $(LIST)
 
 clean:
-	rm -f $(PROJECT).bin $(PROJECT).elf $(PROJECT).hex $(PROJECT).map $(PROJECT).lst $(OBJECTS) $(DEPS)
+	rm -f $(BIN_DIR)/$(PROJECT).bin $(BIN_DIR)/$(PROJECT).elf $(BIN_DIR)/$(PROJECT).hex $(BIN_DIR)/$(PROJECT).map $(BIN_DIR)/$(PROJECT).lst $(OBJECTS) $(DEPS)
 
 .s.o:
 	$(AS) $(CPU) -o $@ $<
@@ -70,7 +74,7 @@ clean:
 	$(CPP) $(CC_FLAGS) $(CC_SYMBOLS) -std=gnu++98 -fno-rtti $(INCLUDE_PATHS) -o $@ $<
 
 
-$(PROJECT).elf: $(OBJECTS) $(SYS_OBJECTS)
+$(BIN_DIR)/$(PROJECT).elf: $(OBJECTS) $(SYS_OBJECTS)
 	$(LD) $(LD_FLAGS) -T$(LINKER_SCRIPT) $(LIBRARY_PATHS) -o $@ $^ $(LIBRARIES) $(LD_SYS_LIBS) $(LIBRARIES) $(LD_SYS_LIBS)
 	@echo ""
 	@echo "*****"
@@ -79,19 +83,19 @@ $(PROJECT).elf: $(OBJECTS) $(SYS_OBJECTS)
 	@echo ""
 	$(SIZE) $@
 
-$(PROJECT).bin: $(PROJECT).elf
+$(BIN_DIR)/$(PROJECT).bin: $(BIN_DIR)/$(PROJECT).elf
 	@$(OBJCOPY) -O binary $< $@
 
-$(PROJECT).hex: $(PROJECT).elf
+$(BIN_DIR)/$(PROJECT).hex: $(BIN_DIR)/$(PROJECT).elf
 	@$(OBJCOPY) -O ihex $< $@
 
-$(PROJECT).lst: $(PROJECT).elf
+$(BIN_DIR)/$(PROJECT).lst: $(BIN_DIR)/$(PROJECT).elf
 	@$(OBJDUMP) -Sdh $< > $@
 
-lst: $(PROJECT).lst
+lst: $(BIN_DIR)/$(PROJECT).lst
 
 size:
-	$(SIZE) $(PROJECT).elf
+	$(SIZE) $(BIN_DIR)/$(PROJECT).elf
 
 DEPS = $(OBJECTS:.o=.d) $(SYS_OBJECTS:.o=.d)
 -include $(DEPS)
