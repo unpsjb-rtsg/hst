@@ -1,8 +1,8 @@
-# HST -- Heterogeneous Scheduling Task
+# HST - Heterogeneous Scheduling Task
 A User Mode Scheduler for FreeRTOS.
 
 ## Overview
-This project implements a user-level scheduler through a user-level task, called Heterogeneous Scheduling Task (HST), in order to support Mixed Critical Systems in a very flexible way, on FreeRTOS v8.1.2.
+This project implements a user-level scheduler through a user-level task, called *Heterogeneous Scheduling Task* (HST), in order to support Mixed Critical Systems in a very flexible way, in the FreeRTOS Real-Time Operating System (www.freertos.org).
 
 The HST design is documented with detail in: *FreeRTOS User Mode Scheduler for Mixed Critical Systems*, Francisco E. Páez, José M. Urriza, Ricardo Cayssials, Javier D. Orozco. 2015 Sixth Argentine Conference on Embedded Systems (CASE). ISBN 978-987-45523-4-1, pp. 37-42, 2015.
 
