@@ -1,8 +1,8 @@
 #include "FreeRTOS.h"
 #include "scheduler.h"
 #include "scheduler_logic.h"
-#include "semphr.h"
 #include "wcrt.h"
+#include "semphr.h"
 #include "queue.h"
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
