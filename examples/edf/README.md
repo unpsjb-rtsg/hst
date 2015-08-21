@@ -1,2 +1,2 @@
-# Earliest-Deadline First example program
-Example project that uses the *Earliest-Deadline First* user-mode scheduler.
+# Earliest-Deadline First
+Example project that uses a *Earliest-Deadline First* scheduler.
