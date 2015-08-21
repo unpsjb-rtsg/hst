@@ -8,6 +8,9 @@ The HST design is documented with detail in: *FreeRTOS User Mode Scheduler for M
 
 The `FreeRTOS` directory contains a copy of the FreeRTOS source code for the ARM Cortex-M3 port. A copy of the mbed Microcontroller Library for the mbed LPC 1768 can be found in the `mbed` directory.
 
+## Examples
+See the `EXAMPLES` directory for instructions on how to build example programs that implements multiples scheduling algorithms by means of the HST.
+
 ## COPYING
 This software is licensed under the GNU General Public License v2.0. A copy of the license can be found in the `LICENSE` file.
 
