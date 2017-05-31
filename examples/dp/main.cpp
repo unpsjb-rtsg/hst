@@ -75,16 +75,16 @@ static void task_body( void* params )
 
 	for (;;)
 	{
-		taskENTER_CRITICAL();
 		dp = ( struct TaskInfo_DP * ) taskInfo->vExt;
-
-		taskEXIT_CRITICAL();
+		vTaskSuspendAll();
+        pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\t%s\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur, dp->xInUpperBand ? "H" : "L" );
+		xTaskResumeAll();
 
 		vUtilsEatCpu( taskInfo->xWcet - 100 );
 
-		taskENTER_CRITICAL();
+		vTaskSuspendAll();
 		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\t%s\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur, dp->xInUpperBand ? "H" : "L" );
-		taskEXIT_CRITICAL();
+		xTaskResumeAll();
 
 		vSchedulerWaitForNextPeriod();
 	}

@@ -114,7 +114,7 @@ static void printTask( const int start, const char* pcTaskName, const struct Tas
 {
 	ListItem_t * pxAppTasksListItem;
 
-	taskENTER_CRITICAL();
+	vTaskSuspendAll();
 
 	pc.printf( "%d\t\t%s\t%s\t\t%d\t%d\t%d\t", xTaskGetTickCount(), pcTaskName, ( start == 0 ? "START" : "END  "), taskInfo->uxReleaseCount, taskInfo->xCur, xAvailableSlack );
 
@@ -128,7 +128,7 @@ static void printTask( const int start, const char* pcTaskName, const struct Tas
 	}
 	pc.printf( "\n" );
 
-	taskEXIT_CRITICAL();
+	xTaskResumeAll();
 }
 
 extern void vApplicationMallocFailedHook( void )
