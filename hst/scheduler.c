@@ -249,7 +249,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 
 #if( configUSE_TIMERS == 1 )
 		/* Check if the unblocked task was the timer task. */
-		if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) xTask )
+		if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) pxTaskInfo )
 		{
 			pxTask = NULL;
 		}
