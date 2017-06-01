@@ -323,8 +323,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 		 * ready task list by FreeRTOS, because it is a new release of a periodic
 		 * task, or it has been unblocked.
 		 */
-		struct TaskInfo * pxTaskInfo = NULL;
-		pxTaskInfo = ( struct TaskInfo * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
+		struct TaskInfo * pxTaskInfo = ( struct TaskInfo * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
 
 		if( pxTaskInfo != NULL )
 		{
