@@ -254,7 +254,7 @@ void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 {
 	if( xTask->xFinished == 1 )
 	{
-		/* Check if the task finished before its promotion time -- it which
+		/* Check if the task finished before its promotion time -- in which
 		case its entry in the promotion list must be removed. */
 		struct TaskInfo_DP * pxTaskDP = ( struct TaskInfo_DP * ) xTask->vExt;
 		if( pxTaskDP != NULL )
