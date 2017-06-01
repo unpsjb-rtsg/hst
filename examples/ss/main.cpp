@@ -22,6 +22,8 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 // HST callback/hook functions
 void vSchedulerNegativeSlackHook( TickType_t xTickCount, BaseType_t xSlack );
 void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+
 void vSchedulerStartHook( void );
 
 #if defined (__cplusplus)
@@ -75,7 +77,7 @@ static void task_body( void* params )
 	{
 		printTask( 0, pcTaskName, taskInfo );
 
-		vUtilsEatCpu( taskInfo->xWcet - 100 );
+		vUtilsEatCpu( taskInfo->xWcet - 10 );
 
 		printTask( 1, pcTaskName, taskInfo );
 
@@ -116,7 +118,7 @@ static void printTask( const int start, const char* pcTaskName, const struct Tas
 
 	vTaskSuspendAll();
 
-	pc.printf( "%d\t\t%s\t%s\t\t%d\t%d\t%d\t", xTaskGetTickCount(), pcTaskName, ( start == 0 ? "START" : "END  "), taskInfo->uxReleaseCount, taskInfo->xCur, xAvailableSlack );
+	pc.printf( "%d\t%s\t%s\t%d\t%d\t%d\t", xTaskGetTickCount(), pcTaskName, ( start == 0 ? "S" : "E"), taskInfo->uxReleaseCount, taskInfo->xCur, xAvailableSlack );
 
 	pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
@@ -126,7 +128,7 @@ static void printTask( const int start, const char* pcTaskName, const struct Tas
 		pc.printf( "%d\t" , s->xSlack );
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
-	pc.printf( "\n" );
+	pc.printf( "\n\r" );
 
 	xTaskResumeAll();
 }
@@ -161,7 +163,7 @@ extern void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName
 	}
 }
 
-extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount )
+void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount )
 {
 	taskDISABLE_INTERRUPTS();
 
@@ -183,6 +185,23 @@ void vSchedulerNegativeSlackHook( TickType_t xTickCount, BaseType_t xSlack )
 	taskDISABLE_INTERRUPTS();
 
 	pc.printf( "Negative slack: %d - %d\n", xTickCount, xSlack );
+
+	DigitalOut led( LED4 );
+
+	for( ;; )
+	{
+		led = 1;
+		wait_ms(1000);
+		led = 0;
+		wait_ms(1000);
+	}
+}
+
+void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount )
+{
+	taskDISABLE_INTERRUPTS();
+
+	pc.printf( "Task %s overrun its wcet: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->xCur, xTask->xWcet );
 
 	DigitalOut led( LED4 );
 

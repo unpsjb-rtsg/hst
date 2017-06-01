@@ -10,6 +10,8 @@
 extern void vSchedulerStartHook( void );
 #endif
 
+extern void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+
 /* Callback function called from the FreeRTOS tick interrupt service. */
 void vApplicationTickHook( void );
 
@@ -129,7 +131,16 @@ void vSchedulerWaitForNextPeriod()
  */
 void vApplicationTickHook( void )
 {
-	/* Returns TRUE if the application scheduler task must be awakened. */
+	if( xCurrentTask != NULL )
+	{
+		/* Verify for task overrun. */
+		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet ) )
+		{
+			vSchedulerWcetOverrunHook( xCurrentTask, xTaskGetTickCountFromISR() );
+		}
+	}
+
+	/* Returns pdTRUE if the application scheduler task must be awakened. */
 	BaseType_t result = vSchedulerTaskSchedulerTickLogic();
 
 	if( result == pdTRUE )

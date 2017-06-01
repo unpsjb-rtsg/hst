@@ -19,6 +19,7 @@ void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 
 // HST callback/hook functions
 void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
 void vSchedulerStartHook( void );
 
 #if defined (__cplusplus)
@@ -124,6 +125,23 @@ extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_
 		wait_ms(250);
 		led = 0;
 		wait_ms(250);
+	}
+}
+
+void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount )
+{
+	taskDISABLE_INTERRUPTS();
+
+	pc.printf( "Task %s overrun its wcet: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->xCur, xTask->xWcet );
+
+	DigitalOut led( LED4 );
+
+	for( ;; )
+	{
+		led = 1;
+		wait_ms(1000);
+		led = 0;
+		wait_ms(1000);
 	}
 }
 
