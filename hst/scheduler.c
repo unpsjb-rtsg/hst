@@ -203,8 +203,12 @@ static void prvSchedulerTaskScheduler( void* params )
 {
     do
     {
+		vTaskSuspendAll();
+
         /* Scheduler logic */
 		vSchedulerTaskSchedulerLogic( &xCurrentTask );
+
+		xTaskResumeAll();
 
         ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
     }
@@ -305,6 +309,14 @@ extern void vSchedulerTaskSuspend( void* pxTask )
  */
 extern void vSchedulerTaskReady( void* pxTask )
 {
+#if( configUSE_TIMERS == 1 )
+	/* Check if the unblocked task was the timer task. */
+	if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) pxTask )
+	{
+		return;
+	}
+#endif
+
 	if( xSchedulerTask != xTaskGetCurrentTaskHandle() )
 	{
 		/* The scheduler task is not running. Then xTask had been moved to the
@@ -312,16 +324,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 		 * task, or it has been unblocked.
 		 */
 		struct TaskInfo * pxTaskInfo = NULL;
-
-#if( configUSE_TIMERS == 1 )
-		/* Check if the unblocked task was the timer task. */
-		if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) pxTask )
-		{
-			return;
-		}
-#else
 		pxTaskInfo = ( struct TaskInfo * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
-#endif
 
 		if( pxTaskInfo != NULL )
 		{
