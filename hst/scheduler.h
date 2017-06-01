@@ -3,6 +3,14 @@
 #define TASK_SCHEDULER_PRIORITY ( configMAX_PRIORITIES - 1 )
 #define TASK_PRIORITY 			( configMAX_PRIORITIES - 2 )
 
+/* Task types. */
+typedef enum {
+	HST_PERIODIC,
+	HST_APERIODIC,
+	HST_SPORADIC,
+	HST_NONE
+} HstTaskType_t;
+
 /* Periodic task info. TCB for application scheduler. */
 struct TaskInfo
 {
@@ -31,6 +39,9 @@ struct TaskInfo
 
 	// ----------------------
 	TickType_t xCur; 		     /* Current release tick count. */
+
+	// ----------------------
+	HstTaskType_t xHstTaskType;
 
 	// ----------------------
 	void* vExt;                  /* Pointer to a scheduling policy specific structure. */

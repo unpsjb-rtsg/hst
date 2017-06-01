@@ -76,6 +76,12 @@ BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const p
 		pxTaskInfo->uxReleaseCount = 0;
 		pxTaskInfo->xCur = 0;
 		pxTaskInfo->xFinished = 0;
+		pxTaskInfo->xHstTaskType = HST_PERIODIC;
+
+		if ( pxTaskInfo->xPeriod == 0 )
+		{
+			pxTaskInfo->xHstTaskType = HST_APERIODIC;
+		}
 
 		/* Create the FreeRTOS task. */
 		xRslt = xTaskCreate( pxTaskCode, pcName, usStackDepth, pxTaskInfo, TASK_PRIORITY, &( pxTaskInfo->xHandle ) );
