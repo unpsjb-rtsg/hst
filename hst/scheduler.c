@@ -156,9 +156,9 @@ void vApplicationTickHook( void )
 		}
 	}
 
-	/* Verify deadlines. */
 	const TickType_t xTickCount = xTaskGetTickCountFromISR();
 
+	/* Verify deadlines. */
 	if( listLIST_IS_EMPTY( &xAbsDeadlinesList ) == pdFALSE )
 	{
 		ListItem_t *pxAbsDeadlineListItem = listGET_HEAD_ENTRY( &xAbsDeadlinesList );
@@ -167,7 +167,7 @@ void vApplicationTickHook( void )
 		{
 			if( listGET_LIST_ITEM_VALUE( pxAbsDeadlineListItem ) < xTickCount )
 			{
-				// Missed deadline
+				/* Missed deadline. */
 				vSchedulerDeadlineMissHook( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAbsDeadlineListItem ), xTickCount );
 			}
 			else
