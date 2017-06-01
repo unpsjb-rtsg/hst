@@ -315,9 +315,9 @@ extern void vSchedulerTaskReady( void* pxTask )
 
 #if( configUSE_TIMERS == 1 )
 		/* Check if the unblocked task was the timer task. */
-		if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) pxTaskInfo )
+		if( xTimerGetTimerDaemonTaskHandle() == ( TaskHandle_t ) pxTask )
 		{
-			pxTask = NULL;
+			return;
 		}
 #else
 		pxTaskInfo = ( struct TaskInfo * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
