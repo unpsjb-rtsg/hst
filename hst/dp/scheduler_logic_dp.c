@@ -34,6 +34,7 @@ void vSchedulerTaskSchedulerStartLogic( void )
 	vListInitialise( &( xReadyTasksListB ) );
 	vListInitialise( &( xReadyTasksListC ) );
 
+    /* List pointers. */
 	pxReadyTasksListA = &( xReadyTasksListA );
 	pxReadyTasksListB = &( xReadyTasksListB );
 	pxReadyTasksListC = &( xReadyTasksListC );
@@ -46,7 +47,7 @@ void vSchedulerTaskSchedulerStartLogic( void )
 		/* Pointer to the application scheduled task. */
 		struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
-		if( pxAppTask->xPeriod > 0 )
+		if( pxAppTask->xHstTaskType == HST_PERIODIC )
 		{
 			/* Init the dual priority parameters structure. */
 			struct TaskInfo_DP * pxTaskInfoDP = ( struct TaskInfo_DP * ) pvPortMalloc( sizeof( struct TaskInfo_DP ) );
