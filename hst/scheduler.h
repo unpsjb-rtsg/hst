@@ -17,8 +17,8 @@ struct TaskInfo
 	TaskHandle_t xHandle;	     /* FreeRTOS task reference. */
 
 	// ----------------------
-	ListItem_t xGenericListItem; /* Points to the app scheduled list. */
-	ListItem_t xReadyListItem;   /* Points to the scheduler ready list. */
+	ListItem_t xGenericListItem;     /* Points to the app scheduled list. */
+	ListItem_t xReadyListItem;       /* Points to the scheduler ready list. */
 	ListItem_t xAbsDeadlineListItem; /* Points to the HST absolute dealine list. */
 
 	// ----------------------
@@ -42,7 +42,7 @@ struct TaskInfo
 	TickType_t xCur; 		     /* Current release tick count. */
 
 	// ----------------------
-	HstTaskType_t xHstTaskType;
+	HstTaskType_t xHstTaskType;  /* Task type. */
 
 	// ----------------------
 	void* vExt;                  /* Pointer to a scheduling policy specific structure. */
