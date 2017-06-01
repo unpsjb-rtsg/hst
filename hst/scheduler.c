@@ -11,12 +11,16 @@ extern void vSchedulerStartHook( void );
 #endif
 
 extern void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
 
 /* Callback function called from the FreeRTOS tick interrupt service. */
 void vApplicationTickHook( void );
 
 /* HST function. */
 static void prvSchedulerTaskScheduler( void * params );
+
+/* Ready tasks absolute deadlines. */
+static List_t xAbsDeadlinesList;
 
 /* Scheduler task handle. */
 static TaskHandle_t xSchedulerTask = NULL;
@@ -53,6 +57,9 @@ void vSchedulerInit( void )
 
 void vSchedulerSetup( void )
 {
+	/* Initialze the absolute deadlines list. */
+	vListInitialise( &( xAbsDeadlinesList ) );
+
 	vSchedulerLogicSetup();
 }
 
@@ -96,6 +103,15 @@ BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const p
 				*pxCreatedTask = pxTaskInfo;
 			}
 
+			/* Initialize task absolute deadline item. */
+			if ( pxTaskInfo->xHstTaskType == HST_PERIODIC )
+			{
+		        vListInitialiseItem( &( pxTaskInfo->xAbsDeadlineListItem ) );
+		        listSET_LIST_ITEM_OWNER( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo );
+		        listSET_LIST_ITEM_VALUE( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo->xAbsolutDeadline );
+		        vListInsert( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) );
+			}
+
 			/* Add the created task to the scheduler ready list. */
 			vSchedulerLogicAddTask( pxTaskInfo );
 
@@ -137,6 +153,33 @@ void vApplicationTickHook( void )
 		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet ) )
 		{
 			vSchedulerWcetOverrunHook( xCurrentTask, xTaskGetTickCountFromISR() );
+		}
+	}
+
+	/* Verify deadlines. */
+	const TickType_t xTickCount = xTaskGetTickCountFromISR();
+
+	if( listLIST_IS_EMPTY( &xAbsDeadlinesList ) == pdFALSE )
+	{
+		ListItem_t *pxAbsDeadlineListItem = listGET_HEAD_ENTRY( &xAbsDeadlinesList );
+
+		while( listGET_END_MARKER( &xAbsDeadlinesList ) != pxAbsDeadlineListItem )
+		{
+			if( listGET_LIST_ITEM_VALUE( pxAbsDeadlineListItem ) < xTickCount )
+			{
+				// Missed deadline
+				vSchedulerDeadlineMissHook( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAbsDeadlineListItem ), xTickCount );
+			}
+			else
+			{
+				/* As xAbsDeadlineListItem is deadline-ordered if the current
+				item absolute deadline instant is greater or equal than the 
+				current tick count, then the remaining items too. */
+				break;
+			}
+
+			// Next absolute deadline.
+			pxAbsDeadlineListItem = listGET_NEXT( pxAbsDeadlineListItem );		
 		}
 	}
 
@@ -186,6 +229,12 @@ extern void vSchedulerTaskDelay( void )
 		if( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() )
 		{
 			xCurrentTask->xFinished = 1;
+
+			/* Remove the finished task absolute deadline item from the deadline list. */
+			if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
+			{
+				uxListRemove( &( xCurrentTask->xAbsDeadlineListItem ) );
+			}
 
 			/* A vTaskDelayUntil() or vTaskDelay() invocation terminates the
 			 * current release of the task. */
@@ -286,6 +335,16 @@ extern void vSchedulerTaskReady( void* pxTask )
 				pxTaskInfo->uxReleaseCount = pxTaskInfo->uxReleaseCount + 1;
 				pxTaskInfo->xFinished = 0;
 				pxTaskInfo->xCur = 0;
+
+				if ( pxTaskInfo->xHstTaskType == HST_PERIODIC )
+				{
+				    /* Add task's absolute deadline into deadlines list. */
+				    if( listIS_CONTAINED_WITHIN( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) ) == pdFALSE )
+				    {
+				    	listSET_LIST_ITEM_VALUE( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo->xAbsolutDeadline );
+				    	vListInsert( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) );
+				    }
+				}
 
 				/* Add the task to the appropriate ready list. */
 				vSchedulerLogicAddTaskToReadyList( pxTaskInfo );

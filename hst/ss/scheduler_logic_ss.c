@@ -9,7 +9,6 @@
 static BaseType_t xUsingSlack = pdFALSE;
 
 extern void vSchedulerNegativeSlackHook( TickType_t xTickCount, BaseType_t xSlack );
-extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
 
 /* Periodic tasks list. */
 List_t xAllTasksList;
@@ -119,31 +118,12 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		}
 	}
 
-
 	/* Update the xAvailableSlack global counter with the minimum slack. */
 	vSlackUpdateAvailableSlack( &xAvailableSlack );
 
 	if( xAvailableSlack < 0 )
 	{
 		vSchedulerNegativeSlackHook( xTaskGetTickCountFromISR(), xAvailableSlack );
-	}
-
-	/* ==================   Verify deadlines   ================== */
-	const TickType_t xTickCount = xTaskGetTickCountFromISR();
-
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxReadyTasksList );
-	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxReadyTasksList );
-
-	while( pxAppTasksListEndMarker != pxAppTasksListItem )
-	{
-		struct TaskInfo * xTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-		if( xTask->xAbsolutDeadline < xTickCount )
-		{
-			vSchedulerDeadlineMissHook( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ), xTickCount );
-		}
-
-		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
 
 	/* If the system slack is below the minimum, wake up the scheduler. */

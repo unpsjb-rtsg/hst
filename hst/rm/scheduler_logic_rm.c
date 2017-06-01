@@ -4,8 +4,6 @@
 
 #define ONE_TICK ( ( TickType_t ) 1 )
 
-extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
-
 /* Ready tasks list. */
 List_t xReadyTasksList;
 List_t * pxReadyTasksList = NULL;
@@ -29,25 +27,6 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		/* Increment the current task executed time. */
 		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-
-	/* ==================   Verify deadlines   ================== */
-
-	const TickType_t xTickCount = xTaskGetTickCountFromISR();
-
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxReadyTasksList );
-	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxReadyTasksList );
-
-	while( pxAppTasksListEndMarker != pxAppTasksListItem )
-	{
-		struct TaskInfo * xTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-		if( xTask->xAbsolutDeadline < xTickCount )
-		{
-			vSchedulerDeadlineMissHook( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ), xTickCount );
-		}
-
-		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
 
 	return pdFALSE;
