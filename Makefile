@@ -8,19 +8,20 @@
 # - dp: Dual Priority
 # - ss: Slack Stealing
 #
-HST_SCHED ?= dp
+HST_SCHED ?= ss
 
 BIN_DIR = out
 
 ###############################################################################
 GCC_BIN = 
 PROJECT = hst
-FREERTOS_OBJECTS = ./FreeRTOS/tasks.o ./FreeRTOS/queue.o ./FreeRTOS/list.o ./FreeRTOS/portable/MemMang/heap_1.o ./FreeRTOS/portable/GCC/ARM_CM3/port.o
+FREERTOS_VERSION = v8.2.1
+FREERTOS_OBJECTS = ./FreeRTOS/$(FREERTOS_VERSION)/tasks.o ./FreeRTOS/$(FREERTOS_VERSION)/queue.o ./FreeRTOS/$(FREERTOS_VERSION)/list.o ./FreeRTOS/$(FREERTOS_VERSION)/portable/MemMang/heap_1.o ./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3/port.o
 HST_OBJECTS = ./hst/$(HST_SCHED)/scheduler_logic_$(HST_SCHED).o ./hst/scheduler.o ./hst/wcrt.o
 EXAMPLE_OBJECTS = ./examples/$(HST_SCHED)/main.o ./examples/utils/utils.o
 OBJECTS = $(FREERTOS_OBJECTS) $(HST_OBJECTS) $(EXAMPLE_OBJECTS)
 SYS_OBJECTS = ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/cmsis_nvic.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/system_LPC17xx.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/board.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/retarget.o ./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/startup_LPC17xx.o 
-FREERTOS_INCLUDE_PATHS =  -I./FreeRTOS/include -I./FreeRTOS/portable/GCC/ARM_CM3 -I./FreeRTOS/config
+FREERTOS_INCLUDE_PATHS =  -I./FreeRTOS/$(FREERTOS_VERSION)/include -I./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3 -I./FreeRTOS/$(FREERTOS_VERSION)/config
 HST_INCLUDE_PATHS = -I./hst -I./hst/$(HST_SCHED)
 EXAMPLE_INCLUDE_PATHS = -I./examples/utils
 INCLUDE_PATHS = -I. -I./mbed -I./mbed/TARGET_LPC1768 -I./mbed/TARGET_LPC1768/TOOLCHAIN_GCC_ARM -I./mbed/TARGET_LPC1768/TARGET_NXP -I./mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X -I./mbed/TARGET_LPC1768/TARGET_NXP/TARGET_LPC176X/TARGET_MBED_LPC1768 $(FREERTOS_INCLUDE_PATHS) $(HST_INCLUDE_PATHS) $(EXAMPLE_INCLUDE_PATHS)
