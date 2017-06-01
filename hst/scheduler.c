@@ -147,9 +147,9 @@ void vSchedulerWaitForNextPeriod()
  */
 void vApplicationTickHook( void )
 {
+	/* Verify for task overrun. */
 	if( xCurrentTask != NULL )
 	{
-		/* Verify for task overrun. */
 		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet ) )
 		{
 			vSchedulerWcetOverrunHook( xCurrentTask, xTaskGetTickCountFromISR() );
