@@ -42,7 +42,7 @@ int main() {
 	/* Create the application scheduled tasks. */
     xSchedulerTaskCreate( task_body, "T01", 256, NULL, 0, NULL, 3000, 3000, 1000 );
     xSchedulerTaskCreate( task_body, "T02", 256, NULL, 1, NULL, 4000, 4000, 1000 );
-    xSchedulerTaskCreate( task_body, "T03", 256, NULL, 2, NULL, 6000, 6000, 2000 );
+    xSchedulerTaskCreate( task_body, "T03", 256, NULL, 2, NULL, 6000, 6000, 1000 );
     xSchedulerTaskCreate( task_body, "T04", 256, NULL, 3, NULL, 12000, 12000, 1000 );
 
 	/* Create and start the scheduler task. */
@@ -68,7 +68,7 @@ static void task_body( void* params )
 		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
 		xTaskResumeAll();
 
-		vUtilsEatCpu( taskInfo->xWcet - 100 );
+		vUtilsEatCpu( taskInfo->xWcet );
 
 		vTaskSuspendAll();
 		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
@@ -132,7 +132,7 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s overrun its wcet: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->xCur, xTask->xWcet );
+	pc.printf( "Task %s (%d) overrun its wcet: %d - %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTask->xCur, xTask->xWcet, xTickCount );
 
 	DigitalOut led( LED4 );
 
@@ -148,6 +148,6 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
-	pc.printf("Earliest Deadline First (EDF)\nNow, shall we begin? :-) \n");
+	pc.printf("Earliest Deadline First (EDF)\n");
 }
 #endif

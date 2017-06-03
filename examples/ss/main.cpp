@@ -77,7 +77,7 @@ static void task_body( void* params )
 	{
 		printTask( 0, pcTaskName, taskInfo );
 
-		vUtilsEatCpu( taskInfo->xWcet - 10 );
+		vUtilsEatCpu( taskInfo->xWcet );
 
 		printTask( 1, pcTaskName, taskInfo );
 
@@ -217,7 +217,7 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
-	pc.printf("Rate Monotonic + Slack Stealing\nNow, shall we begin? :-) \n");
+	pc.printf("Rate Monotonic + Slack Stealing\n");
 	pc.printf( "\nSetup -- %d\t -- \t%d\t", xTaskGetTickCount(), xAvailableSlack );
 
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );

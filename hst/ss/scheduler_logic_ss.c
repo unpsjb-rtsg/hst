@@ -98,7 +98,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		 * increment the current aperiodic task executed time. */
 		vSlackDecrementAllTasksSlack( ONE_TICK );
 		struct TaskInfo * pxAperiodicTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
-		pxAperiodicTask->xCur = pxAperiodicTask->xCur + ONE_TICK;
+		//pxAperiodicTask->xCur = pxAperiodicTask->xCur + ONE_TICK;
 	}
 	else
 	{
@@ -108,7 +108,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 			 * increment the current task executed time. */
 			struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 			vSlackDecrementTasksSlack( pxTask , ONE_TICK );
-			pxTask->xCur = pxTask->xCur + ONE_TICK;
+			//pxTask->xCur = pxTask->xCur + ONE_TICK;
 		}
 		else
 		{
@@ -165,9 +165,9 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 	/* Check if the current release of the periodic task has finished. */
 	if( *pxCurrentTask != NULL )
 	{
-		if( ( *pxCurrentTask )->xPeriod > 0 )
+		if( ( *pxCurrentTask )->xHstTaskType == HST_PERIODIC )
 		{
-			if( ( *pxCurrentTask )->xFinished == 1 )
+			if( ( *pxCurrentTask )->xState == HST_FINISHED )
 			{
 #if ( USE_SLACK_K == 0 )
 				/* Recalculate slack. */
@@ -205,9 +205,9 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 		{
 			if( xUsingSlack == pdFALSE )
 			{
-				/* No aperiodic tasks are running. */
+				/* Resume the execution of the first aperiodic task in the
+				 * ready list. */
 				*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
-				vTaskResume( ( *pxCurrentTask )->xHandle );
 				xUsingSlack = pdTRUE;
 			}
 		}
@@ -227,12 +227,10 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 
 	if( xUsingSlack == pdFALSE )
 	{
-	    /* Periodic task scheduling -- resume the execution of the first task
-	     * in the ready list, if any. */
+	    /* Resume the execution of the first task in the ready list, if any. */
 		if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
 		{
 			*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
-			vTaskResume( ( *pxCurrentTask )->xHandle );
 		}
 	}
 }
@@ -242,7 +240,7 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
  */
 void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
 {
-	if( xTask->xPeriod > 0U )
+	if( xTask->xHstTaskType == HST_PERIODIC )
 	{
 		vListInsert( pxReadyTasksList, &( xTask->xReadyListItem ) );
 	}

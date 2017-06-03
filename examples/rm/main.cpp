@@ -68,7 +68,7 @@ static void task_body( void* params )
 		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
 		xTaskResumeAll();
 
-		vUtilsEatCpu( taskInfo->xWcet - 100 );
+		vUtilsEatCpu( taskInfo->xWcet );
 
 		vTaskSuspendAll();
 		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
@@ -115,7 +115,7 @@ extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsolutDeadline );
 
 	DigitalOut led( LED4 );
 
@@ -132,7 +132,7 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s overrun its wcet: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->xCur, xTask->xWcet );
+	pc.printf( "Task %s (%d) overrun its wcet: %d - %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTask->xCur, xTask->xWcet, xTickCount );
 
 	DigitalOut led( LED4 );
 
@@ -148,6 +148,6 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
-	pc.printf("RM\nNow, shall we begin? :-) \n");
+	pc.printf("Rate Monotonic Scheduling\n");
 }
 #endif

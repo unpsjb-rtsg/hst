@@ -5,6 +5,8 @@
 #include "semphr.h"
 #include "queue.h"
 
+#define ONE_TICK ( ( TickType_t ) 1 )
+
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 /* Application Hooks. */
 extern void vSchedulerStartHook( void );
@@ -84,8 +86,8 @@ BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const p
 		pxTaskInfo->xWcrt = 0;
 		pxTaskInfo->uxReleaseCount = 0;
 		pxTaskInfo->xCur = 0;
-		pxTaskInfo->xFinished = 0;
 		pxTaskInfo->xHstTaskType = HST_PERIODIC;
+		pxTaskInfo->xState = HST_READY;
 
 		if ( pxTaskInfo->xPeriod == 0 )
 		{
@@ -147,10 +149,12 @@ void vSchedulerWaitForNextPeriod()
  */
 void vApplicationTickHook( void )
 {
-	/* Verify for task overrun. */
 	if( xCurrentTask != NULL )
 	{
-		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet ) )
+        xCurrentTask->xCur = xCurrentTask->xCur + ONE_TICK;
+
+        /* Verify for task overrun. */
+		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet) )
 		{
 			vSchedulerWcetOverrunHook( xCurrentTask, xTaskGetTickCountFromISR() );
 		}
@@ -205,12 +209,50 @@ static void prvSchedulerTaskScheduler( void* params )
     {
 		vTaskSuspendAll();
 
+		if ( xCurrentTask != NULL )
+		{
+		    if ( xCurrentTask->xState == HST_SUSPENDED )
+	        {
+	        	// The current task suspended itself.
+		    	if ( xCurrentTask->xHstTaskType == HST_APERIODIC )
+		    	{
+		    		xCurrentTask->xState = HST_FINISHED;
+		    	}
+	        	vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
+	        }
+		    else if ( xCurrentTask->xState == HST_BLOCKED )
+	        {
+	        	// The current task was blocked.
+	        	vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
+	        }
+		    else if ( xCurrentTask->xState == HST_FINISHED )
+	        {
+	        	/* Remove the finished task absolute deadline item from the deadline list. */
+	        	if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
+	        	{
+	        		uxListRemove( &( xCurrentTask->xAbsDeadlineListItem ) );
+	        	}
+
+	        	/* A vTaskDelayUntil() or vTaskDelay() invocation terminates the
+	        	 * current release of the task. */
+	        	vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
+	        }
+		}		
+
         /* Scheduler logic */
 		vSchedulerTaskSchedulerLogic( &xCurrentTask );
 
+		/* Resume the execution of the selected task. */
+		if ( xCurrentTask != NULL )
+		{
+			xCurrentTask->xState = HST_READY;
+			vTaskResume( xCurrentTask->xHandle );
+		}
+
 		xTaskResumeAll();
 
-        ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
+        /* With pdTRUE this acts as a binary semaphore. */
+		ulTaskNotifyTake( pdTRUE, portMAX_DELAY );
     }
     while( pdTRUE );
 
@@ -227,26 +269,11 @@ static void prvSchedulerTaskScheduler( void* params )
  */
 extern void vSchedulerTaskDelay( void )
 {
-	if( xCurrentTask != NULL )
+	/* Wake up the scheduler task only if is an application scheduled task. */
+	if( ( xCurrentTask != NULL ) && ( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() ) )
 	{
-		/* Wake up the scheduler task only if is an application scheduled task. */
-		if( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() )
-		{
-			xCurrentTask->xFinished = 1;
-
-			/* Remove the finished task absolute deadline item from the deadline list. */
-			if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
-			{
-				uxListRemove( &( xCurrentTask->xAbsDeadlineListItem ) );
-			}
-
-			/* A vTaskDelayUntil() or vTaskDelay() invocation terminates the
-			 * current release of the task. */
-			vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
-
-			/* Wake up the scheduler task. */
-			xTaskNotifyGive( xSchedulerTask );
-		}
+		xCurrentTask->xState = HST_FINISHED;
+		vTaskNotifyGiveFromISR( xSchedulerTask, NULL );
 	}
 }
 
@@ -258,16 +285,11 @@ extern void vSchedulerTaskDelay( void )
  */
 extern void vSchedulerTaskBlock( void* pxResource )
 {
-	if( xCurrentTask != NULL )
+	if( ( xCurrentTask != NULL ) && ( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() ) )
 	{
 		/* Wake up the scheduler task only if is an application scheduled task. */
-		if( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() )
-		{
-			vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
-
-			/* Wake up the scheduler task. */
-			xTaskNotifyGive( xSchedulerTask );
-		}
+		xCurrentTask->xState = HST_BLOCKED;
+		vTaskNotifyGiveFromISR( xSchedulerTask, NULL );
 	}
 }
 
@@ -279,21 +301,12 @@ extern void vSchedulerTaskBlock( void* pxResource )
  */
 extern void vSchedulerTaskSuspend( void* pxTask )
 {
-	if( xSchedulerTask != xTaskGetCurrentTaskHandle() )
+	if ( xCurrentTask != NULL && ( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() ) )
 	{
-		if( xCurrentTask != NULL )
-		{
-			if( xCurrentTask->xHandle == ( TaskHandle_t ) pxTask )
-			{
-				xCurrentTask->xFinished = 1;
-
-				vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
-
-				/* Wake up the scheduler task. */
-				xTaskNotifyGive( xSchedulerTask );
-			}
-		}
-	}
+		/* The task suspended itself. */
+		xCurrentTask->xState = HST_SUSPENDED;
+		vTaskNotifyGiveFromISR( xSchedulerTask, NULL );
+	}	
 }
 
 /**
@@ -316,6 +329,10 @@ extern void vSchedulerTaskReady( void* pxTask )
 		return;
 	}
 #endif
+    if( xSchedulerTask == ( TaskHandle_t ) pxTask )
+	{
+		return;
+	}
 
 	if( xSchedulerTask != xTaskGetCurrentTaskHandle() )
 	{
@@ -327,7 +344,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 
 		if( pxTaskInfo != NULL )
 		{
-			if( pxTaskInfo->xFinished == 1 )
+			if( pxTaskInfo->xState == HST_FINISHED )
 			{
 				/* If pxTask is a new instance, update the absolute deadline of
 				 * the release, reset the CPU counter and increment the release
@@ -335,7 +352,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 				 */
 				pxTaskInfo->xAbsolutDeadline = pxTaskInfo->xRelease + pxTaskInfo->xDeadline;
 				pxTaskInfo->uxReleaseCount = pxTaskInfo->uxReleaseCount + 1;
-				pxTaskInfo->xFinished = 0;
+				pxTaskInfo->xState = HST_READY;
 				pxTaskInfo->xCur = 0;
 
 				if ( pxTaskInfo->xHstTaskType == HST_PERIODIC )
@@ -352,7 +369,7 @@ extern void vSchedulerTaskReady( void* pxTask )
 				vSchedulerLogicAddTaskToReadyList( pxTaskInfo );
 			}
 
-			/* Wake up the scheduler task. */
+			/* Wake up the scheduler task, if not running */
 			if( xSchedulerTask != NULL )
 			{
 				/* If vSchedulerTaskReady is called from an ISR, we need to

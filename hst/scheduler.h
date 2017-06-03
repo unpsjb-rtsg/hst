@@ -4,12 +4,21 @@
 #define TASK_PRIORITY 			( configMAX_PRIORITIES - 2 )
 
 /* Task types. */
-typedef enum {
+typedef enum 
+{
 	HST_PERIODIC,
 	HST_APERIODIC,
 	HST_SPORADIC,
 	HST_NONE
 } HstTaskType_t;
+
+typedef enum
+{
+	HST_READY,
+	HST_SUSPENDED,
+	HST_BLOCKED,
+	HST_FINISHED
+} HstTaskState_t;
 
 /* Periodic task info. TCB for application scheduler. */
 struct TaskInfo
@@ -20,9 +29,6 @@ struct TaskInfo
 	ListItem_t xGenericListItem;     /* Points to the app scheduled list. */
 	ListItem_t xReadyListItem;       /* Points to the scheduler ready list. */
 	ListItem_t xAbsDeadlineListItem; /* Points to the HST absolute dealine list. */
-
-	// ----------------------
-	BaseType_t xFinished;        /* 0: running. 1: suspended (called vTaskDelayUntil). */
 
 	// ----------------------
 	UBaseType_t xPriority;	     /* Priority. */
@@ -43,10 +49,13 @@ struct TaskInfo
 
 	// ----------------------
 	HstTaskType_t xHstTaskType;  /* Task type. */
+	HstTaskState_t xState;
 
 	// ----------------------
 	void* vExt;                  /* Pointer to a scheduling policy specific structure. */
 };
+
+typedef struct TaskInfo HstTask_t;
 
 #if defined (__cplusplus)
 extern "C" {

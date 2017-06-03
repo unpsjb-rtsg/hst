@@ -2,8 +2,6 @@
 #include "scheduler.h"
 #include "scheduler_logic.h"
 
-#define ONE_TICK ( ( TickType_t ) 1 )
-
 /* Periodic tasks list. */
 List_t xAllTasksList;
 List_t * pxAllTasksList = NULL;
@@ -124,24 +122,6 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		}
 	}
 
-	/* Increment the current task executed time ============================= */
-
-	if( listLIST_IS_EMPTY( pxReadyTasksListA ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListA );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-	else if( listLIST_IS_EMPTY( pxReadyTasksListB ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListB );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-	else if( listLIST_IS_EMPTY( pxReadyTasksListC ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListC );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-
 	return xReturn;
 }
 
@@ -170,14 +150,7 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
     	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
     }
 
-	/* Check if the current release of the periodic task has finished. */
-	if( *pxCurrentTask != NULL )
-	{
-		if( ( *pxCurrentTask )->xFinished == 1 )
-		{
-			*pxCurrentTask = NULL;
-		}
-	}
+	*pxCurrentTask = NULL;
 
 	/* Resume the execution of the first task in the higher priority ready list, if any. */
 	if( listLIST_IS_EMPTY( pxReadyTasksListA ) == pdFALSE )
@@ -191,11 +164,6 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 	else if( listLIST_IS_EMPTY( pxReadyTasksListC ) == pdFALSE )
 	{
 		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListC );
-	}
-
-	if( *pxCurrentTask != NULL )
-	{
-		vTaskResume( ( *pxCurrentTask )->xHandle );
 	}
 }
 
@@ -234,10 +202,10 @@ void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
  */
 void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 {
-	if( xTask->xFinished == 1 )
+	if( xTask->xState == HST_FINISHED )
 	{
-		/* Check if the task finished before its promotion time -- in which
-		case its entry in the promotion list must be removed. */
+		/* If the task finished before its promotion time its entry in the
+		 * promotion list must be removed. */
 		struct TaskInfo_DP * pxTaskDP = ( struct TaskInfo_DP * ) xTask->vExt;
 		if( pxTaskDP != NULL )
 		{

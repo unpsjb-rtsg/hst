@@ -2,8 +2,6 @@
 #include "scheduler.h"
 #include "scheduler_logic.h"
 
-#define ONE_TICK ( ( TickType_t ) 1 )
-
 /* Ready tasks list. */
 List_t xReadyTasksList;
 List_t * pxReadyTasksList = NULL;
@@ -22,13 +20,6 @@ void vSchedulerTaskSchedulerStartLogic( void )
  */
 BaseType_t vSchedulerTaskSchedulerTickLogic()
 {
-	if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
-	{
-		/* Increment the current task executed time. */
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-
 	return pdFALSE;
 }
 
@@ -53,20 +44,12 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
     	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
     }
 
-	/* Check if the current release of the periodic task has finished. */
-	if( *pxCurrentTask != NULL )
-	{
-		if( listIS_CONTAINED_WITHIN( pxReadyTasksList, &( ( *pxCurrentTask )->xReadyListItem ) ) == pdFALSE )
-		{
-			*pxCurrentTask = NULL;
-		}
-	}
+	*pxCurrentTask = NULL;
 
 	/* Periodic task scheduling -- resume the execution of the first task in the ready list, if any. */
 	if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
 	{
 		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
-		vTaskResume( ( *pxCurrentTask )->xHandle );
 	}
 }
 
