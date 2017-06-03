@@ -28,22 +28,6 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
  */
 void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 {
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxReadyTasksList );
-    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxReadyTasksList );
-
-    /* Suspend all ready tasks. */
-    while( pxAppTasksListEndMarker != pxAppTasksListItem )
-    {
-    	struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-    	if( eTaskGetState( pxAppTask->xHandle ) == eReady )
-    	{
-    		vTaskSuspend( pxAppTask->xHandle );
-    	}
-
-    	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
-    }
-
 	*pxCurrentTask = NULL;
 
 	/* Periodic task scheduling -- resume the execution of the first task in the ready list, if any. */

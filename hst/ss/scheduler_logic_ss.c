@@ -146,22 +146,6 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 	/* Current RTOS tick value. */
 	const TickType_t xTickCount = xTaskGetTickCount();
 
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxReadyTasksList );
-    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxReadyTasksList );
-
-    /* Suspend all ready tasks. */
-    while( pxAppTasksListEndMarker != pxAppTasksListItem )
-    {
-    	struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-    	if( eTaskGetState( pxAppTask->xHandle ) == eReady )
-    	{
-    		vTaskSuspend( pxAppTask->xHandle );
-    	}
-
-    	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
-    }
-
 	/* Check if the current release of the periodic task has finished. */
 	if( *pxCurrentTask != NULL )
 	{

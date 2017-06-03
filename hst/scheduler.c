@@ -227,7 +227,7 @@ static void prvSchedulerTaskScheduler( void* params )
 	        }
 		    else if ( xCurrentTask->xState == HST_FINISHED )
 	        {
-	        	/* Remove the finished task absolute deadline item from the deadline list. */
+	        	// Remove the finished task absolute deadline item from the deadline list.
 	        	if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
 	        	{
 	        		uxListRemove( &( xCurrentTask->xAbsDeadlineListItem ) );
@@ -237,7 +237,22 @@ static void prvSchedulerTaskScheduler( void* params )
 	        	 * current release of the task. */
 	        	vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
 	        }
-		}		
+		}
+
+		ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
+
+		/* Suspend all ready tasks. */
+		while( pxAppTasksListItem != listGET_END_MARKER( pxAllTasksList ))
+		{
+			struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+
+			if( eTaskGetState( pxAppTask->xHandle ) == eReady )
+			{
+				vTaskSuspend( pxAppTask->xHandle );
+			}
+
+			pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
+		}
 
         /* Scheduler logic */
 		vSchedulerTaskSchedulerLogic( &xCurrentTask );
