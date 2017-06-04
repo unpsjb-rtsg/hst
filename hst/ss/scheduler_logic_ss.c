@@ -45,10 +45,10 @@ void vSchedulerTaskSchedulerStartLogic( void )
 	while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
 		/* Pointer to the application scheduled task. */
-		struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+		HstTCB_t * pxAppTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 		/* Init the slack structure. */
-		struct TaskInfo_Slack * pxTaskInfoSlack = ( struct TaskInfo_Slack * ) pvPortMalloc( sizeof( struct TaskInfo_Slack ) );
+		TaskSs_t * pxTaskInfoSlack = ( TaskSs_t * ) pvPortMalloc( sizeof( TaskSs_t ) );
 
 		/* Initialize slack methods attributes. */
 		pxTaskInfoSlack->xDi = 0;
@@ -74,11 +74,10 @@ void vSchedulerTaskSchedulerStartLogic( void )
 	while( listGET_END_MARKER( pxAllAperiodicTasksList ) != pxAppTasksListItem )
 	{
 		/* Init aperiodic tasks. */
-		vSchedulerLogicAddTaskToReadyList( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
+		vSchedulerLogicAddTaskToReadyList( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) );
 
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
-
 
 	/* Minimal slack at the critical instant. */
 	vSlackUpdateAvailableSlack( &xAvailableSlack );
@@ -97,8 +96,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		/* A NRTT is using Available Slack -- decrement all slack counters, and
 		 * increment the current aperiodic task executed time. */
 		vSlackDecrementAllTasksSlack( ONE_TICK );
-		struct TaskInfo * pxAperiodicTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
-		//pxAperiodicTask->xCur = pxAperiodicTask->xCur + ONE_TICK;
+		HstTCB_t * pxAperiodicTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
 	}
 	else
 	{
@@ -106,9 +104,8 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		{
 			/* A RTT is running -- decrement higher priority tasks slack, and
 			 * increment the current task executed time. */
-			struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
+			HstTCB_t * pxTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 			vSlackDecrementTasksSlack( pxTask , ONE_TICK );
-			//pxTask->xCur = pxTask->xCur + ONE_TICK;
 		}
 		else
 		{
@@ -141,7 +138,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 /**
  * AppSchedLogic_Sched()
  */
-void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
+void vSchedulerTaskSchedulerLogic( HstTCB_t **pxCurrentTask )
 {
 	/* Current RTOS tick value. */
 	const TickType_t xTickCount = xTaskGetTickCount();
@@ -191,7 +188,7 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 			{
 				/* Resume the execution of the first aperiodic task in the
 				 * ready list. */
-				*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
+				*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
 				xUsingSlack = pdTRUE;
 			}
 		}
@@ -214,7 +211,7 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 	    /* Resume the execution of the first task in the ready list, if any. */
 		if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
 		{
-			*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
+			*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 		}
 	}
 }
@@ -222,7 +219,7 @@ void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
 /**
  * Add xTask to the appropiate ready task list.
  */
-void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask )
 {
 	if( xTask->xHstTaskType == HST_PERIODIC )
 	{
@@ -237,7 +234,7 @@ void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
 /**
  * Remove xTask from the ready task list.
  */
-void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask )
 {
 	uxListRemove( &( xTask->xReadyListItem ) );
 }
@@ -245,7 +242,7 @@ void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 /**
  * Add pxTask as a application scheduled task by the HST.
  */
-void vSchedulerLogicAddTask( struct TaskInfo * pxTask )
+void vSchedulerLogicAddTask( HstTCB_t * pxTask )
 {
 	/* Initialize the task's generic item list. */
 	vListInitialiseItem( &( pxTask->xGenericListItem ) );

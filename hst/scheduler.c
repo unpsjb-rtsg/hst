@@ -12,8 +12,8 @@
 extern void vSchedulerStartHook( void );
 #endif
 
-extern void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
-extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+extern void vSchedulerWcetOverrunHook( HstTCB_t *xTask, const TickType_t xTickCount );
+extern void vSchedulerDeadlineMissHook( HstTCB_t *xTask, const TickType_t xTickCount );
 
 /* Callback function called from the FreeRTOS tick interrupt service. */
 void vApplicationTickHook( void );
@@ -21,14 +21,14 @@ void vApplicationTickHook( void );
 /* HST function. */
 static void prvSchedulerTaskScheduler( void * params );
 
-/* Ready tasks absolute deadlines. */
+/* Absolute deadlines. */
 static List_t xAbsDeadlinesList;
 
 /* Scheduler task handle. */
 static TaskHandle_t xSchedulerTask = NULL;
 
 /* Current task. */
-static struct TaskInfo * xCurrentTask = NULL;
+static HstTCB_t *xCurrentTask = NULL;
 
 /**
  * AppSched_Init()
@@ -68,64 +68,64 @@ void vSchedulerSetup( void )
 /**
  * AppSched_TaskCreate()
  */
-BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const pcName, const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, struct TaskInfo ** pxCreatedTask, TickType_t xPeriod, TickType_t xDeadline, TickType_t xWcet )
+BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const pcName, const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, HstTCB_t **pxCreatedTask, TickType_t xPeriod, TickType_t xDeadline, TickType_t xWcet )
 {
-	struct TaskInfo *pxTaskInfo = ( struct TaskInfo * ) pvPortMalloc( sizeof( struct TaskInfo ) );
+	HstTCB_t *pxTaskHstTCB = ( HstTCB_t * ) pvPortMalloc( sizeof( HstTCB_t ) );
 
 	BaseType_t xRslt = pdFAIL;
 
-	if( pxTaskInfo != NULL )
+	if( pxTaskHstTCB != NULL )
 	{
 		/* Initialize the scheduler tasks TCBe members. */
-		pxTaskInfo->xPriority = uxPriority;
-		pxTaskInfo->xPeriod = xPeriod;
-		pxTaskInfo->xDeadline = xDeadline;
-		pxTaskInfo->xAbsolutDeadline = xDeadline;
-		pxTaskInfo->xRelease = 0;
-		pxTaskInfo->xWcet = xWcet;
-		pxTaskInfo->xWcrt = 0;
-		pxTaskInfo->uxReleaseCount = 0;
-		pxTaskInfo->xCur = 0;
-		pxTaskInfo->xHstTaskType = HST_PERIODIC;
-		pxTaskInfo->xState = HST_READY;
+		pxTaskHstTCB->xPriority = uxPriority;
+		pxTaskHstTCB->xPeriod = xPeriod;
+		pxTaskHstTCB->xDeadline = xDeadline;
+		pxTaskHstTCB->xAbsolutDeadline = xDeadline;
+		pxTaskHstTCB->xRelease = 0;
+		pxTaskHstTCB->xWcet = xWcet;
+		pxTaskHstTCB->xWcrt = 0;
+		pxTaskHstTCB->uxReleaseCount = 0;
+		pxTaskHstTCB->xCur = 0;
+		pxTaskHstTCB->xHstTaskType = HST_PERIODIC;
+		pxTaskHstTCB->xState = HST_READY;
 
-		if ( pxTaskInfo->xPeriod == 0 )
+		if ( pxTaskHstTCB->xPeriod == 0 )
 		{
-			pxTaskInfo->xHstTaskType = HST_APERIODIC;
+			pxTaskHstTCB->xHstTaskType = HST_APERIODIC;
 		}
 
 		/* Create the FreeRTOS task. */
-		xRslt = xTaskCreate( pxTaskCode, pcName, usStackDepth, pxTaskInfo, TASK_PRIORITY, &( pxTaskInfo->xHandle ) );
+		xRslt = xTaskCreate( pxTaskCode, pcName, usStackDepth, pxTaskHstTCB, TASK_PRIORITY, &( pxTaskHstTCB->xHandle ) );
 
 		if( xRslt == pdPASS)
 		{
 			if( ( void * ) pxCreatedTask != NULL )
 			{
 				/* Pass the TCBe out. */
-				*pxCreatedTask = pxTaskInfo;
+				*pxCreatedTask = pxTaskHstTCB;
 			}
 
 			/* Initialize task absolute deadline item. */
-			if ( pxTaskInfo->xHstTaskType == HST_PERIODIC )
+			if ( pxTaskHstTCB->xHstTaskType == HST_PERIODIC )
 			{
-		        vListInitialiseItem( &( pxTaskInfo->xAbsDeadlineListItem ) );
-		        listSET_LIST_ITEM_OWNER( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo );
-		        listSET_LIST_ITEM_VALUE( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo->xAbsolutDeadline );
-		        vListInsert( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) );
+		        vListInitialiseItem( &( pxTaskHstTCB->xAbsDeadlineListItem ) );
+		        listSET_LIST_ITEM_OWNER( &( pxTaskHstTCB->xAbsDeadlineListItem ), pxTaskHstTCB );
+		        listSET_LIST_ITEM_VALUE( &( pxTaskHstTCB->xAbsDeadlineListItem ), pxTaskHstTCB->xAbsolutDeadline );
+		        vListInsert( &xAbsDeadlinesList, &( pxTaskHstTCB->xAbsDeadlineListItem ) );
 			}
 
 			/* Add the created task to the scheduler ready list. */
-			vSchedulerLogicAddTask( pxTaskInfo );
+			vSchedulerLogicAddTask( pxTaskHstTCB );
 
 			/* Associate the eTCB and TCB. */
-			vTaskSetThreadLocalStoragePointer( pxTaskInfo->xHandle, 0, ( void * ) pxTaskInfo );
+			vTaskSetThreadLocalStoragePointer( pxTaskHstTCB->xHandle, 0, ( void * ) pxTaskHstTCB );
 
-			/* The initial state of a app scheduled task is suspended. */
-			vTaskSuspend( pxTaskInfo->xHandle );
+			/* The initial state of a HST scheduled task is suspended. */
+			vTaskSuspend( pxTaskHstTCB->xHandle );
 		}
 		else
 		{
-			vPortFree( pxTaskInfo );
+			vPortFree( pxTaskHstTCB );
 		}
 	}
 
@@ -151,7 +151,8 @@ void vApplicationTickHook( void )
 {
 	if( xCurrentTask != NULL )
 	{
-        xCurrentTask->xCur = xCurrentTask->xCur + ONE_TICK;
+        /* Update execution time. */
+		xCurrentTask->xCur = xCurrentTask->xCur + ONE_TICK;
 
         /* Verify for task overrun. */
 		if ( ( xCurrentTask->xWcet > 0 ) && ( xCurrentTask->xCur > xCurrentTask->xWcet) )
@@ -172,7 +173,7 @@ void vApplicationTickHook( void )
 			if( listGET_LIST_ITEM_VALUE( pxAbsDeadlineListItem ) < xTickCount )
 			{
 				/* Missed deadline. */
-				vSchedulerDeadlineMissHook( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAbsDeadlineListItem ), xTickCount );
+				vSchedulerDeadlineMissHook( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAbsDeadlineListItem ), xTickCount );
 			}
 			else
 			{
@@ -244,7 +245,7 @@ static void prvSchedulerTaskScheduler( void* params )
 		/* Suspend all ready tasks. */
 		while( pxAppTasksListItem != listGET_END_MARKER( pxAllTasksList ))
 		{
-			struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+			HstTCB_t *pxAppTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 			if( eTaskGetState( pxAppTask->xHandle ) == eReady )
 			{
@@ -300,9 +301,9 @@ extern void vSchedulerTaskDelay( void )
  */
 extern void vSchedulerTaskBlock( void* pxResource )
 {
+	/* Wake up the scheduler task only if is an application scheduled task. */
 	if( ( xCurrentTask != NULL ) && ( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() ) )
 	{
-		/* Wake up the scheduler task only if is an application scheduled task. */
 		xCurrentTask->xState = HST_BLOCKED;
 		vTaskNotifyGiveFromISR( xSchedulerTask, NULL );
 	}
@@ -316,9 +317,9 @@ extern void vSchedulerTaskBlock( void* pxResource )
  */
 extern void vSchedulerTaskSuspend( void* pxTask )
 {
+	/* Wake up the scheduler task only if is an application scheduled task. */
 	if ( xCurrentTask != NULL && ( xCurrentTask->xHandle == xTaskGetCurrentTaskHandle() ) )
 	{
-		/* The task suspended itself. */
 		xCurrentTask->xState = HST_SUSPENDED;
 		vTaskNotifyGiveFromISR( xSchedulerTask, NULL );
 	}	
@@ -346,16 +347,17 @@ extern void vSchedulerTaskReady( void* pxTask )
 #endif
     if( xSchedulerTask == ( TaskHandle_t ) pxTask )
 	{
+    	/* The task that is transitioned into the Ready state is the HST. */
 		return;
 	}
 
 	if( xSchedulerTask != xTaskGetCurrentTaskHandle() )
 	{
 		/* The scheduler task is not running. Then xTask had been moved to the
-		 * ready task list by FreeRTOS, because it is a new release of a periodic
-		 * task, or it has been unblocked.
+		 * ready task list by FreeRTOS, because it is a new release of task or
+		 * it has been unblocked/resumed.
 		 */
-		struct TaskInfo * pxTaskInfo = ( struct TaskInfo * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
+		HstTCB_t *pxTaskInfo = ( HstTCB_t * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
 
 		if( pxTaskInfo != NULL )
 		{

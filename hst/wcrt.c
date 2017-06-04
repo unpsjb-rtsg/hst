@@ -13,7 +13,7 @@ BaseType_t xWcrtCalculateTasksWcrt( void )
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
-	struct TaskInfo *pxTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+	HstTCB_t *pxTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 	/* First task WCRT. */
 	TickType_t xT = pxTask->xWcet;
@@ -31,7 +31,7 @@ BaseType_t xWcrtCalculateTasksWcrt( void )
     /* Process all the periodic tasks in xTasks. */
     while( pxAppTasksListEndMarker != pxAppTasksListItem )
 	{
-    	pxTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+    	pxTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 		xT = xT + pxTask->xWcet;
 
@@ -43,7 +43,7 @@ BaseType_t xWcrtCalculateTasksWcrt( void )
 			ListItem_t * pxAppTaskHigherPrioListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 			do
 			{
-				struct TaskInfo * pxHigherPrioTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTaskHigherPrioListItem );
+				HstTCB_t *pxHigherPrioTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTaskHigherPrioListItem );
 
 				xW = xW + ( U_CEIL( xT, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xWcet );
 

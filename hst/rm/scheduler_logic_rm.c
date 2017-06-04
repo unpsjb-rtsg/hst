@@ -26,21 +26,21 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 /**
  * AppSchedLogic_Sched()
  */
-void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
+void vSchedulerTaskSchedulerLogic( HstTCB_t **pxCurrentTask )
 {
 	*pxCurrentTask = NULL;
 
 	/* Select the first task in the ready list, if any. */
 	if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
 	{
-		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
+		*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 	}
 }
 
 /**
  * Add xTask to the appropriate ready task list.
  */
-void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask )
 {
 	vListInsert( pxReadyTasksList, &( xTask->xReadyListItem ) );
 }
@@ -48,7 +48,7 @@ void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
 /**
  * Remove xTask from the ready task list.
  */
-void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask )
 {
 	uxListRemove( &( xTask->xReadyListItem ) );
 }
@@ -56,7 +56,7 @@ void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 /**
  * Add pxTask as a application scheduled task by the HST.
  */
-void vSchedulerLogicAddTask( struct TaskInfo * pxTask )
+void vSchedulerLogicAddTask( HstTCB_t *pxTask )
 {
 	/* Initialize the task's ready item list. */
 	vListInitialiseItem( &( pxTask->xReadyListItem ) );

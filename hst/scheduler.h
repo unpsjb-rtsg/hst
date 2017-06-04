@@ -12,6 +12,7 @@ typedef enum
 	HST_NONE
 } HstTaskType_t;
 
+/* Task states for the HST. */
 typedef enum
 {
 	HST_READY,
@@ -20,8 +21,8 @@ typedef enum
 	HST_FINISHED
 } HstTaskState_t;
 
-/* Periodic task info. TCB for application scheduler. */
-struct TaskInfo
+/* Periodic task TCB for application scheduler. */
+struct HstTCB
 {
 	TaskHandle_t xHandle;	     /* FreeRTOS task reference. */
 
@@ -55,7 +56,7 @@ struct TaskInfo
 	void* vExt;                  /* Pointer to a scheduling policy specific structure. */
 };
 
-typedef struct TaskInfo HstTask_t;
+typedef struct HstTCB HstTCB_t;
 
 #if defined (__cplusplus)
 extern "C" {
@@ -64,11 +65,11 @@ extern "C" {
 /* Trace blocking and suspended tasks. */
 void vSchedulerTaskDelay( void );
 
-void vSchedulerTaskReady( void* pxTask );
+void vSchedulerTaskReady( void *pxTask );
 
-void vSchedulerTaskBlock( void* pxResource );
+void vSchedulerTaskBlock( void *pxResource );
 
-void vSchedulerTaskSuspend( void* pxTask );
+void vSchedulerTaskSuspend( void *pxTask );
 
 /**
  * Application scheduler setup.
@@ -83,7 +84,7 @@ void vSchedulerInit( void );
 /**
  * Create a application scheduled task.
  */
-BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const pcName, const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, struct TaskInfo ** const pxCreatedTask, TickType_t xPeriod, TickType_t xDeadline, TickType_t xWcet );
+BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const pcName, const uint16_t usStackDepth, void * const pvParameters, UBaseType_t uxPriority, HstTCB_t ** const pxCreatedTask, TickType_t xPeriod, TickType_t xDeadline, TickType_t xWcet );
 
 /**
  * Create a aperiodic application scheduled task.
@@ -102,13 +103,13 @@ void vSchedulerLogicSetup( void );
 
 void vSchedulerTaskSchedulerStartLogic( void );
 
-void vSchedulerLogicAddTask( struct TaskInfo * xTask );
+void vSchedulerLogicAddTask( HstTCB_t *xTask );
 
-void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask );
+void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask );
 
-void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask );
+void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask );
 
-void vSchedulerTaskSchedulerLogic( struct TaskInfo **xCurrentTask );
+void vSchedulerTaskSchedulerLogic( HstTCB_t **xCurrentTask );
 
 struct TaskInfo* xSchedulerGetTaskTCBe( TaskHandle_t xTask );
 

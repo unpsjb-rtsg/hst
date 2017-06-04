@@ -16,10 +16,12 @@ struct TaskInfo_Slack {
 	TickType_t xK;
 };
 
-void vSlackCalculateSlack_fixed1( struct TaskInfo * pxTask, const TickType_t xTc );
+typedef struct TaskInfo_Slack TaskSs_t;
 
-void vSlackGainSlack( const struct TaskInfo * pxTask, const TickType_t xTicks ); //  __attribute__((always_inline));
-void vSlackDecrementTasksSlack( const struct TaskInfo * pxTask, const TickType_t xTicks );
+void vSlackCalculateSlack_fixed1( HstTCB_t * pxTask, const TickType_t xTc );
+
+void vSlackGainSlack( const HstTCB_t * pxTask, const TickType_t xTicks ); //  __attribute__((always_inline));
+void vSlackDecrementTasksSlack( const HstTCB_t * pxTask, const TickType_t xTicks );
 void vSlackDecrementAllTasksSlack( const TickType_t xTicks );
 void vSlackUpdateAvailableSlack( BaseType_t * xAvailableSlack );
 
