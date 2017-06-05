@@ -179,7 +179,7 @@ void vSchedulerTaskSwitchedOut( void );
 #define traceTASK_DELAY() 						vSchedulerTaskDelay();
 #define traceTASK_DELAY_UNTIL(xTimeToWake)		vSchedulerTaskDelay();
 #define traceTASK_SUSPEND(xTask)				vSchedulerTaskSuspend( xTask );
-#define traceMOVED_TASK_TO_READY_STATE(xTask) 	vSchedulerTaskReady( xTask );
+#define tracePOST_MOVED_TASK_TO_READY_STATE(xTask) 	vSchedulerTaskReady( xTask );
 
 /* Additional configuration required. */
 #define configUSE_SCHEDULER_START_HOOK            1
