@@ -8,14 +8,19 @@
 # - dp: Dual Priority
 # - ss: Slack Stealing
 #
-HST_SCHED ?= ss
+HST_SCHED ?= rm
+
+###############################################################################
+# FreeRTOS version supported.
+# - v8.2.1
+# - v9.0.0
+FREERTOS_VERSION ?= v9.0.0
 
 BIN_DIR = out
 
 ###############################################################################
 GCC_BIN = 
 PROJECT = hst
-FREERTOS_VERSION = v8.2.1
 FREERTOS_OBJECTS = ./FreeRTOS/$(FREERTOS_VERSION)/tasks.o ./FreeRTOS/$(FREERTOS_VERSION)/queue.o ./FreeRTOS/$(FREERTOS_VERSION)/list.o ./FreeRTOS/$(FREERTOS_VERSION)/portable/MemMang/heap_1.o ./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3/port.o
 HST_OBJECTS = ./hst/$(HST_SCHED)/scheduler_logic_$(HST_SCHED).o ./hst/scheduler.o ./hst/wcrt.o
 EXAMPLE_OBJECTS = ./examples/$(HST_SCHED)/main.o ./examples/utils/utils.o
@@ -53,9 +58,9 @@ LD_FLAGS += -Wl,-Map=$(BIN_DIR)/$(PROJECT).map,--cref
 LD_SYS_LIBS = -lstdc++ -lsupc++ -lm -lc -lgcc -lnosys
 
 ifeq ($(DEBUG), 1)
-  CC_FLAGS += -DDEBUG -O0
+  CC_FLAGS += -DDEBUG -Og
 else
-  CC_FLAGS += -DNDEBUG -Os
+  CC_FLAGS += -DNDEBUG -O3
 endif
 
 LIST = $(BIN_DIR)/$(PROJECT).bin $(BIN_DIR)/$(PROJECT).hex
