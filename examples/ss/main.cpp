@@ -105,6 +105,9 @@ static void aperiodic_task_body( void* params )
 		/* The HST scheduler will execute the task if there is enough slack available. */
 		vTaskDelay( xRandomDelay );
 	}
+
+	// If the tasks ever leaves the for cycle, kill it.
+	vTaskDelete( NULL );
 }
 
 static void printTask( const char* start, const char* pcTaskName, const HstTCB_t * taskInfo )

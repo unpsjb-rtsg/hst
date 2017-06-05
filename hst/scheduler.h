@@ -111,8 +111,6 @@ void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask );
 
 void vSchedulerTaskSchedulerLogic( HstTCB_t **xCurrentTask );
 
-struct TaskInfo* xSchedulerGetTaskTCBe( TaskHandle_t xTask );
-
 BaseType_t vSchedulerTaskSchedulerTickLogic( void );
 
 /* --------------------------------------------------------------------- */

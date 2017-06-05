@@ -58,13 +58,13 @@ static void task_body( void* params )
 	for (;;)
 	{
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
+		pc.printf( "%d\t%s\tS\t%d\t%d\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
 		xTaskResumeAll();
 
 		vUtilsEatCpu( taskInfo->xWcet );
 
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
+		pc.printf( "%d\t%s\tE\t%d\t%d\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
 		xTaskResumeAll();
 
 		vSchedulerWaitForNextPeriod();

@@ -228,14 +228,13 @@ static void prvSchedulerTaskScheduler( void* params )
 	        }
 		    else if ( xCurrentTask->xState == HST_FINISHED )
 	        {
-	        	// Remove the finished task absolute deadline item from the deadline list.
-	        	if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
+		    	/* A vTaskDelayUntil() or vTaskDelay() invocation terminates the
+		    	 * current release of the task. */
+		    	if ( xCurrentTask->xHstTaskType == HST_PERIODIC )
 	        	{
 	        		uxListRemove( &( xCurrentTask->xAbsDeadlineListItem ) );
 	        	}
 
-	        	/* A vTaskDelayUntil() or vTaskDelay() invocation terminates the
-	        	 * current release of the task. */
 	        	vSchedulerLogicRemoveTaskFromReadyList( xCurrentTask );
 	        }
 		}
@@ -250,6 +249,30 @@ static void prvSchedulerTaskScheduler( void* params )
 			if( eTaskGetState( pxAppTask->xHandle ) == eReady )
 			{
 				vTaskSuspend( pxAppTask->xHandle );
+
+				/* If the task is ready to execute, but its state is HST_FINISHED,
+				 * then it had been moved to the ready task list by FreeRTOS,
+				 * because it is a new release or it has been unblocked/resumed.
+				 * If is a new release, update the absolute deadline, reset the CPU
+				 * counter and increment the release counter.
+				 */
+				if( pxAppTask->xState == HST_FINISHED )
+				{
+					pxAppTask->xAbsolutDeadline = pxAppTask->xRelease + pxAppTask->xDeadline;
+					pxAppTask->uxReleaseCount = pxAppTask->uxReleaseCount + 1;
+					pxAppTask->xState = HST_READY;
+					pxAppTask->xCur = 0;
+
+					if ( pxAppTask->xHstTaskType == HST_PERIODIC )
+					{
+						/* Add task's absolute deadline into deadlines list. */
+						if( listIS_CONTAINED_WITHIN( &xAbsDeadlinesList, &( pxAppTask->xAbsDeadlineListItem ) ) == pdFALSE )
+						{
+							listSET_LIST_ITEM_VALUE( &( pxAppTask->xAbsDeadlineListItem ), pxAppTask->xAbsolutDeadline );
+							vListInsert( &xAbsDeadlinesList, &( pxAppTask->xAbsDeadlineListItem ) );
+						}
+					}
+				}
 			}
 
 			pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
@@ -352,52 +375,32 @@ extern void vSchedulerTaskReady( void* pxTask )
 		return;
 	}
 
-	if( xSchedulerTask != xTaskGetCurrentTaskHandle() )
+	HstTCB_t *pxTaskInfo = ( HstTCB_t * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
+
+	/* If task state is HST_READY, its execution was resumed by the HST with
+	 * an invocation of vTaskResume(). */
+	if( pxTaskInfo->xState == HST_READY )
 	{
-		/* The scheduler task is not running. Then xTask had been moved to the
-		 * ready task list by FreeRTOS, because it is a new release of task or
-		 * it has been unblocked/resumed.
-		 */
-		HstTCB_t *pxTaskInfo = ( HstTCB_t * ) pvTaskGetThreadLocalStoragePointer( pxTask, 0 );
-
-		if( pxTaskInfo != NULL )
+		return;
+	}
+	else
+	{
+		/* Add the task to the appropriate ready list. */
+		if( pxTaskInfo->xState == HST_FINISHED )
 		{
-			if( pxTaskInfo->xState == HST_FINISHED )
-			{
-				/* If pxTask is a new instance, update the absolute deadline of
-				 * the release, reset the CPU counter and increment the release
-				 * counter.
-				 */
-				pxTaskInfo->xAbsolutDeadline = pxTaskInfo->xRelease + pxTaskInfo->xDeadline;
-				pxTaskInfo->uxReleaseCount = pxTaskInfo->uxReleaseCount + 1;
-				pxTaskInfo->xState = HST_READY;
-				pxTaskInfo->xCur = 0;
+			vSchedulerLogicAddTaskToReadyList( pxTaskInfo );
+		}
 
-				if ( pxTaskInfo->xHstTaskType == HST_PERIODIC )
-				{
-				    /* Add task's absolute deadline into deadlines list. */
-				    if( listIS_CONTAINED_WITHIN( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) ) == pdFALSE )
-				    {
-				    	listSET_LIST_ITEM_VALUE( &( pxTaskInfo->xAbsDeadlineListItem ), pxTaskInfo->xAbsolutDeadline );
-				    	vListInsert( &xAbsDeadlinesList, &( pxTaskInfo->xAbsDeadlineListItem ) );
-				    }
-				}
-
-				/* Add the task to the appropriate ready list. */
-				vSchedulerLogicAddTaskToReadyList( pxTaskInfo );
-			}
-
-			/* Wake up the scheduler task, if not running */
-			if( xSchedulerTask != NULL )
-			{
-				/* If vSchedulerTaskReady is called from an ISR, we need to
-				 * invoke the FromISR variant of xSemaphoreGive(). This can
-				 * occur when the task is unblocked in xTaskIncrementTick().
-				 */
-				BaseType_t xHigherPriorityTaskWoken = pdFALSE;
-				vTaskNotifyGiveFromISR( xSchedulerTask, &xHigherPriorityTaskWoken );
-				portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
-			}
+		/* Wake up the scheduler task, if not running */
+		if( xSchedulerTask != NULL )
+		{
+			/* If vSchedulerTaskReady is called from an ISR, we need to
+			 * invoke the FromISR variant of xSemaphoreGive(). This can
+			 * occur when the task is unblocked in xTaskIncrementTick().
+			 */
+			BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+			vTaskNotifyGiveFromISR( xSchedulerTask, &xHigherPriorityTaskWoken );
+			portYIELD_FROM_ISR( xHigherPriorityTaskWoken );
 		}
 	}
 }
