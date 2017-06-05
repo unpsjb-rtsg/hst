@@ -2,8 +2,6 @@
 #include "scheduler.h"
 #include "scheduler_logic.h"
 
-#define ONE_TICK ( ( TickType_t ) 1 )
-
 /* Periodic tasks list. */
 List_t xAllTasksList;
 List_t * pxAllTasksList = NULL;
@@ -45,12 +43,12 @@ void vSchedulerTaskSchedulerStartLogic( void )
 	while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
 		/* Pointer to the application scheduled task. */
-		struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+		HstTCB_t * pxAppTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 		if( pxAppTask->xHstTaskType == HST_PERIODIC )
 		{
 			/* Init the dual priority parameters structure. */
-			struct TaskInfo_DP * pxTaskInfoDP = ( struct TaskInfo_DP * ) pvPortMalloc( sizeof( struct TaskInfo_DP ) );
+			TaskDp_t * pxTaskInfoDP = ( TaskDp_t * ) pvPortMalloc( sizeof( TaskDp_t ) );
 			pxTaskInfoDP->xInUpperBand = pdFALSE;
 			pxTaskInfoDP->xPromotion = pxAppTask->xDeadline - pxAppTask->xWcrt;
 
@@ -96,7 +94,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 				/* Removes the task promotion time from the list. */
 				uxListRemove( pxPromotionListItem );
 
-				struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxPromotionListItem );
+				HstTCB_t * pxTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxPromotionListItem );
 
 				/* Removes the task from the lower band ready list. */
 				uxListRemove( &( pxTask->xReadyListItem ) );
@@ -106,7 +104,7 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 
 				/* Moves the promoted task to the higher band ready list. */
 				vListInsert( pxReadyTasksListA, &( pxTask->xReadyListItem ) );
-				( ( struct TaskInfo_DP * ) pxTask->vExt )->xInUpperBand = pdTRUE;
+				( ( TaskDp_t * ) pxTask->vExt )->xInUpperBand = pdTRUE;
 
 				/* As the task was promoted, a context switch is needed to be
 				performed. */
@@ -124,24 +122,6 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		}
 	}
 
-	/* Increment the current task executed time ============================= */
-
-	if( listLIST_IS_EMPTY( pxReadyTasksListA ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListA );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-	else if( listLIST_IS_EMPTY( pxReadyTasksListB ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListB );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-	else if( listLIST_IS_EMPTY( pxReadyTasksListC ) == pdFALSE )
-	{
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListC );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-
 	return xReturn;
 }
 
@@ -152,61 +132,33 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
  *
  * AppSchedLogic_Sched()
  */
-void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
+void vSchedulerTaskSchedulerLogic( HstTCB_t **pxCurrentTask )
 {
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
-    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
-
-    /* Suspend all ready tasks. */
-    while( pxAppTasksListEndMarker != pxAppTasksListItem )
-    {
-    	struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-    	if( eTaskGetState( pxAppTask->xHandle ) == eReady )
-    	{
-    		vTaskSuspend( pxAppTask->xHandle );
-    	}
-
-    	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
-    }
-
-	/* Check if the current release of the periodic task has finished. */
-	if( *pxCurrentTask != NULL )
-	{
-		if( ( *pxCurrentTask )->xFinished == 1 )
-		{
-			*pxCurrentTask = NULL;
-		}
-	}
+	*pxCurrentTask = NULL;
 
 	/* Resume the execution of the first task in the higher priority ready list, if any. */
 	if( listLIST_IS_EMPTY( pxReadyTasksListA ) == pdFALSE )
 	{
-		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListA );
+		*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListA );
 	}
 	else if( listLIST_IS_EMPTY( pxReadyTasksListB ) == pdFALSE )
 	{
-		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListB );
+		*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListB );
 	}
 	else if( listLIST_IS_EMPTY( pxReadyTasksListC ) == pdFALSE )
 	{
-		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListC );
-	}
-
-	if( *pxCurrentTask != NULL )
-	{
-		vTaskResume( ( *pxCurrentTask )->xHandle );
+		*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksListC );
 	}
 }
 
 /**
  * Add xTask to the appropiate ready task list.
  */
-void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask )
 {
-	if( xTask->xPeriod > 0U )
+	if( xTask->xHstTaskType == HST_PERIODIC )
 	{
-		struct TaskInfo_DP * pxTaskDP = ( struct TaskInfo_DP * ) xTask->vExt;
+		TaskDp_t * pxTaskDP = ( TaskDp_t * ) xTask->vExt;
 
 		if( pxTaskDP->xInUpperBand == pdTRUE )
 		{
@@ -232,13 +184,13 @@ void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
 /**
  * Remove xTask from the ready task list.
  */
-void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask )
 {
-	if( xTask->xFinished == 1 )
+	if( xTask->xState == HST_FINISHED )
 	{
-		/* Check if the task finished before its promotion time -- in which
-		case its entry in the promotion list must be removed. */
-		struct TaskInfo_DP * pxTaskDP = ( struct TaskInfo_DP * ) xTask->vExt;
+		/* If the task finished before its promotion time its entry in the
+		 * promotion list must be removed. */
+		TaskDp_t * pxTaskDP = ( TaskDp_t * ) xTask->vExt;
 		if( pxTaskDP != NULL )
 		{
 			if( pxTaskDP->xInUpperBand == pdFALSE )
@@ -256,7 +208,7 @@ void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 /**
  * Add pxTask as a application scheduled task by the HST.
  */
-void vSchedulerLogicAddTask( struct TaskInfo * pxTask )
+void vSchedulerLogicAddTask( HstTCB_t *pxTask )
 {
 	/* Initialize the task's generic item list. */
 	vListInitialiseItem( &( pxTask->xGenericListItem ) );

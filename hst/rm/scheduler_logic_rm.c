@@ -2,8 +2,6 @@
 #include "scheduler.h"
 #include "scheduler_logic.h"
 
-#define ONE_TICK ( ( TickType_t ) 1 )
-
 /* Ready tasks list. */
 List_t xReadyTasksList;
 List_t * pxReadyTasksList = NULL;
@@ -22,58 +20,27 @@ void vSchedulerTaskSchedulerStartLogic( void )
  */
 BaseType_t vSchedulerTaskSchedulerTickLogic()
 {
-	if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
-	{
-		/* Increment the current task executed time. */
-		struct TaskInfo * pxTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
-		pxTask->xCur = pxTask->xCur + ONE_TICK;
-	}
-
 	return pdFALSE;
 }
 
 /**
  * AppSchedLogic_Sched()
  */
-void vSchedulerTaskSchedulerLogic( struct TaskInfo **pxCurrentTask )
+void vSchedulerTaskSchedulerLogic( HstTCB_t **pxCurrentTask )
 {
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxReadyTasksList );
-    ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxReadyTasksList );
+	*pxCurrentTask = NULL;
 
-    /* Suspend all ready tasks. */
-    while( pxAppTasksListEndMarker != pxAppTasksListItem )
-    {
-    	struct TaskInfo * pxAppTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
-
-    	if( eTaskGetState( pxAppTask->xHandle ) == eReady )
-    	{
-    		vTaskSuspend( pxAppTask->xHandle );
-    	}
-
-    	pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
-    }
-
-	/* Check if the current release of the periodic task has finished. */
-	if( *pxCurrentTask != NULL )
-	{
-		if( listIS_CONTAINED_WITHIN( pxReadyTasksList, &( ( *pxCurrentTask )->xReadyListItem ) ) == pdFALSE )
-		{
-			*pxCurrentTask = NULL;
-		}
-	}
-
-	/* Periodic task scheduling -- resume the execution of the first task in the ready list, if any. */
+	/* Select the first task in the ready list, if any. */
 	if( listLIST_IS_EMPTY( pxReadyTasksList ) == pdFALSE )
 	{
-		*pxCurrentTask = ( struct TaskInfo * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
-		vTaskResume( ( *pxCurrentTask )->xHandle );
+		*pxCurrentTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxReadyTasksList );
 	}
 }
 
 /**
  * Add xTask to the appropriate ready task list.
  */
-void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask )
 {
 	vListInsert( pxReadyTasksList, &( xTask->xReadyListItem ) );
 }
@@ -81,7 +48,7 @@ void vSchedulerLogicAddTaskToReadyList( struct TaskInfo *xTask )
 /**
  * Remove xTask from the ready task list.
  */
-void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
+void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask )
 {
 	uxListRemove( &( xTask->xReadyListItem ) );
 }
@@ -89,7 +56,7 @@ void vSchedulerLogicRemoveTaskFromReadyList( struct TaskInfo *xTask )
 /**
  * Add pxTask as a application scheduled task by the HST.
  */
-void vSchedulerLogicAddTask( struct TaskInfo * pxTask )
+void vSchedulerLogicAddTask( HstTCB_t *pxTask )
 {
 	/* Initialize the task's ready item list. */
 	vListInitialiseItem( &( pxTask->xReadyListItem ) );

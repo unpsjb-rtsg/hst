@@ -6,25 +6,18 @@
 #include "utils.h"
 #include "semphr.h"
 
-/* Prototypes for the standard FreeRTOS callback/hook functions implemented
- * within this file. The extern "C" is required to avoid name mangling
- * between C and C++ code. */
-#if defined (__cplusplus)
-extern "C" {
-#endif
-
+/* The extern "C" is required to avoid name mangling between C and C++ code. */
+extern "C"
+{
 // FreeRTOS callback/hook functions
 void vApplicationMallocFailedHook( void );
 void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName );
 
 // HST callback/hook functions
-void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount );
-void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount );
+void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTickCount );
+void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickCount );
 void vSchedulerStartHook( void );
-
-#if defined (__cplusplus)
 }
-#endif
 
 static void task_body( void* params );
 
@@ -49,6 +42,7 @@ int main() {
 	vSchedulerInit();
 
 	/* The execution should never reach here. */
+	for (;;);
 }
 
 /**
@@ -57,7 +51,7 @@ int main() {
 static void task_body( void* params )
 {
 	// eTCB
-	struct TaskInfo *taskInfo = ( struct TaskInfo * ) params;
+	HstTCB_t *taskInfo = ( HstTCB_t * ) params;
 
 	// A pointer to the task's name, standard NULL terminated C string.
 	char *pcTaskName = pcTaskGetTaskName( NULL );
@@ -68,7 +62,7 @@ static void task_body( void* params )
 		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
 		xTaskResumeAll();
 
-		vUtilsEatCpu( taskInfo->xWcet - 100 );
+		vUtilsEatCpu( taskInfo->xWcet );
 
 		vTaskSuspendAll();
 		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\t\n", xTaskGetTickCount(), pcTaskName, taskInfo->uxReleaseCount, taskInfo->xCur );
@@ -111,11 +105,11 @@ extern void vApplicationStackOverflowHook( TaskHandle_t pxTask, char *pcTaskName
 	}
 }
 
-extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_t xTickCount )
+extern void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTickCount )
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsolutDeadline );
 
 	DigitalOut led( LED4 );
 
@@ -128,11 +122,11 @@ extern void vSchedulerDeadlineMissHook( struct TaskInfo * xTask, const TickType_
 	}
 }
 
-void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickCount )
+extern void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickCount )
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s overrun its wcet: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->xCur, xTask->xWcet );
+	pc.printf( "Task %s (%d) overrun its wcet: %d - %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTask->xCur, xTask->xWcet, xTickCount );
 
 	DigitalOut led( LED4 );
 
@@ -148,6 +142,6 @@ void vSchedulerWcetOverrunHook( struct TaskInfo * xTask, const TickType_t xTickC
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
 extern void vSchedulerStartHook()
 {
-	pc.printf("RM\nNow, shall we begin? :-) \n");
+	pc.printf("Rate Monotonic Scheduling\n");
 }
 #endif

@@ -4,18 +4,18 @@
 #include "slack.h"
 #include "utils.h"
 
-static inline TickType_t xSlackGetWorkLoad( struct TaskInfo * pxTask, const TickType_t xTc );
-static inline BaseType_t prvSlackCalcSlack( struct TaskInfo * pxTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc );
+static inline TickType_t xSlackGetWorkLoad( HstTCB_t * pxTask, const TickType_t xTc );
+static inline BaseType_t prvSlackCalcSlack( HstTCB_t * pxTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc );
 
 BaseType_t xAvailableSlack = 0;
 
-void vSlackCalculateSlack_fixed1( struct TaskInfo * pxTask, const TickType_t xTc )
+void vSlackCalculateSlack_fixed1( HstTCB_t * pxTask, const TickType_t xTc )
 {
 	ListItem_t const *pxTaskListEndItem = listGET_END_MARKER( pxAllTasksList );  // end marker
     ListItem_t *pxTaskListItem = &( pxTask->xGenericListItem );		            // this task list item
     ListItem_t *pxHigherPrioTaskListItem = pxTaskListItem->pxPrevious;	        // higher priority task item
 
-    struct TaskInfo_Slack * pxTaskSlack = ( struct TaskInfo_Slack * ) pxTask->vExt;
+    TaskSs_t* pxTaskSlack = ( TaskSs_t* ) pxTask->vExt;
 
     TickType_t xXi = ( TickType_t ) 0U;
     TickType_t xDi = pxTask->xDeadline;
@@ -40,8 +40,8 @@ void vSlackCalculateSlack_fixed1( struct TaskInfo * pxTask, const TickType_t xTc
     BaseType_t xTmax = portMAX_DELAY;
 
     // TCB of the higher priority task.
-    struct TaskInfo * pxHigherPrioTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
-    struct TaskInfo_Slack * pxHigherPrioTaskSlack = ( struct TaskInfo_Slack * ) pxHigherPrioTask->vExt;
+    HstTCB_t * pxHigherPrioTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+    TaskSs_t* pxHigherPrioTaskSlack = ( TaskSs_t* ) pxHigherPrioTask->vExt;
 
     // Corollary 2 (follows theorem 5)
     if ( ( pxHigherPrioTaskSlack->xDi + pxHigherPrioTask->xWcet >= xDi ) && ( xDi >= pxHigherPrioTaskSlack->xTtma ) )
@@ -88,7 +88,7 @@ void vSlackCalculateSlack_fixed1( struct TaskInfo * pxTask, const TickType_t xTc
     // Find the slack in [intervalo, xDi)
     do
     {
-    	pxHigherPrioTask = ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
+    	pxHigherPrioTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxHigherPrioTaskListItem );
 
     	xii = U_CEIL( xIntervalo, pxHigherPrioTask->xPeriod ) * pxHigherPrioTask->xPeriod;
 
@@ -123,13 +123,13 @@ inline void vSlackUpdateAvailableSlack( BaseType_t * xAvailableSlack )
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
-	*xAvailableSlack = ( ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack;
+	*xAvailableSlack = ( ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack;
 
 	while( pxAppTasksListEndMarker != pxAppTasksListItem )
 	{
-		if( ( ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack < *xAvailableSlack )
+		if( ( ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack < *xAvailableSlack )
 		{
-			*xAvailableSlack = ( ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack;
+			*xAvailableSlack = ( ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack;
 		}
 
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
@@ -143,7 +143,7 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks )
 
 	while( pxAppTasksListEndMarker != pxAppTasksListItem )
 	{
-		struct TaskInfo_Slack * tmpTask = ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
+		TaskSs_t* tmpTask = ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
 
 		if( tmpTask->xSlack > 0 )
 		{
@@ -154,14 +154,14 @@ inline void vSlackDecrementAllTasksSlack( const TickType_t xTicks )
 	}
 }
 
-inline void vSlackDecrementTasksSlack( const struct TaskInfo * pxTask, const TickType_t xTicks )
+inline void vSlackDecrementTasksSlack( const HstTCB_t * pxTask, const TickType_t xTicks )
 {
 	const ListItem_t * pxAppTasksListEndMarker = &( pxTask->xGenericListItem );
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
 	while( pxAppTasksListEndMarker != pxAppTasksListItem )
 	{
-		struct TaskInfo_Slack * tmpTask = ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
+		TaskSs_t* tmpTask = ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
 
 		if( tmpTask->xSlack > 0 )
 		{
@@ -172,19 +172,19 @@ inline void vSlackDecrementTasksSlack( const struct TaskInfo * pxTask, const Tic
 	}
 }
 
-inline void vSlackGainSlack( const struct TaskInfo * pxTask, const TickType_t xTicks )
+inline void vSlackGainSlack( const HstTCB_t * pxTask, const TickType_t xTicks )
 {
 	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
 	ListItem_t * pxAppTasksListItem = listGET_NEXT( &( pxTask->xGenericListItem ) );
 
 	while( pxAppTasksListItem != pxAppTasksListEndMarker )
 	{
-		( ( struct TaskInfo_Slack * ) ( ( struct TaskInfo * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack += ( BaseType_t ) xTicks;
+		( ( TaskSs_t* ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt )->xSlack += ( BaseType_t ) xTicks;
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}
 }
 
-static inline TickType_t xSlackGetWorkLoad( struct TaskInfo * pxTask, const TickType_t xTc )
+static inline TickType_t xSlackGetWorkLoad( HstTCB_t * pxTask, const TickType_t xTc )
 {
     TickType_t xW = ( TickType_t ) 0U;	// Workload
 	TickType_t xA = ( TickType_t ) 0U;
@@ -196,7 +196,7 @@ static inline TickType_t xSlackGetWorkLoad( struct TaskInfo * pxTask, const Tick
 	// Until we process all the maximum priority tasks (including pxTask)
 	while( pxAppTasksListEndMarker != pxAppTasksListItem )
 	{
-		struct TaskInfo * pxHighPrioTask = listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+		HstTCB_t * pxHighPrioTask = listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
 		// The number of instances of pxHigherPrioTask in [0, xT)
 		xA = U_FLOOR( xTc, pxHighPrioTask->xPeriod );
@@ -229,7 +229,7 @@ static inline TickType_t xSlackGetWorkLoad( struct TaskInfo * pxTask, const Tick
     return xW;
 }
 
-static inline BaseType_t prvSlackCalcSlack( struct TaskInfo * pxTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc )
+static inline BaseType_t prvSlackCalcSlack( HstTCB_t * pxTask, const TickType_t xTc, const TickType_t xT, const TickType_t xWc )
 {
     const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
     ListItem_t * pxAppTasksListItem = &( pxTask->xGenericListItem );
@@ -238,7 +238,7 @@ static inline BaseType_t prvSlackCalcSlack( struct TaskInfo * pxTask, const Tick
 
     while( pxAppTasksListEndMarker != pxAppTasksListItem )
     {
-    	struct TaskInfo * pxHighPrioTask = listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
+    	HstTCB_t * pxHighPrioTask = listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
     	/* Accumulated workload of higher priority tasks in [0, xT) */
     	xW = xW + ( U_CEIL( xT, pxHighPrioTask->xPeriod ) * pxHighPrioTask->xWcet );
