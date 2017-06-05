@@ -345,9 +345,10 @@ extern void vSchedulerTaskReady( void* pxTask )
 		return;
 	}
 #endif
-    if( xSchedulerTask == ( TaskHandle_t ) pxTask )
+
+	/* Check if the task that transitioned into the Ready state is the HST. */
+	if( xSchedulerTask == ( TaskHandle_t ) pxTask )
 	{
-    	/* The task that is transitioned into the Ready state is the HST. */
 		return;
 	}
 
