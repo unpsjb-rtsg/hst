@@ -1,16 +1,17 @@
 #include "wcrt.h"
 #include "scheduler.h"
-#include "scheduler_logic.h"  // pxBigTaskList
-#include "utils.h"
+#include "scheduler_logic.h"  // pxAllTasksList
+#include "utils.h"            // U_CEIL, U_FLOOR
 
 /**
- * Sjodin
+ * RTA
+ * "Improved Response-Time Analysis Calculations"
+ * http://doi.ieeecomputersociety.org/10.1109/REAL.1998.739773
  */
 BaseType_t xWcrtCalculateTasksWcrt( void )
 {
 	TickType_t xW = 0U;
 
-	const ListItem_t * pxAppTasksListEndMarker = listGET_END_MARKER( pxAllTasksList );
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
 	HstTCB_t *pxTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
@@ -29,7 +30,7 @@ BaseType_t xWcrtCalculateTasksWcrt( void )
     pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 
     /* Process all the periodic tasks in xTasks. */
-    while( pxAppTasksListEndMarker != pxAppTasksListItem )
+    while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
     	pxTask = ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem );
 
