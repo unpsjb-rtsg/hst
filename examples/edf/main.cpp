@@ -42,6 +42,7 @@ int main() {
 	vSchedulerInit();
 
 	/* The execution should never reach here. */
+	for (;;);
 }
 
 /**
@@ -70,7 +71,7 @@ static void task_body( void* params )
 		vSchedulerWaitForNextPeriod();
 	}
 
-	/* If the tasks ever leaves the for cycle, kill it. */
+	/* If the tasks ever leaves the for loop, kill it. */
 	vTaskDelete( NULL );
 }
 

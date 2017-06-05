@@ -79,7 +79,7 @@ static void task_body( void* params )
 		vSchedulerWaitForNextPeriod();
 	}
 
-	// If the tasks ever leaves the for cycle, kill it.
+	// If the tasks ever leaves the for loop, kill it.
 	vTaskDelete( NULL );
 }
 
@@ -106,7 +106,7 @@ static void aperiodic_task_body( void* params )
 		vTaskDelay( xRandomDelay );
 	}
 
-	// If the tasks ever leaves the for cycle, kill it.
+	// If the tasks ever leaves the for loop, kill it.
 	vTaskDelete( NULL );
 }
 

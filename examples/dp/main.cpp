@@ -117,6 +117,9 @@ static void aperiodic_task_body( void* params )
 		/* The HST scheduler will execute the task if there is enough slack available. */
 		vTaskDelay( xRandomDelay );
 	}
+
+	/* If the tasks ever leaves the for loop, kill it. */
+	vTaskDelete( NULL );
 }
 
 extern void vApplicationMallocFailedHook( void )
