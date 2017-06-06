@@ -3,6 +3,9 @@
 .project
 .cproject
 
+build
+build/**
+
 *.zip
 *.tar.gz
 *.pdf
