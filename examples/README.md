@@ -1,7 +1,7 @@
 # Example Programs
-Example projects that implements multiple scheduling policies using the User Mode Scheduler. These examples runs on the mbed LPC 1768 microcontroller.
+Example projects that implements different scheduling policies using the User Mode Scheduler.
 
-to choose which example project build, change the `HST_SCHED` parameter in the root `Makefile` to one of these values:
+To choose which example project build, change the `HST_SCHED` parameter of the `Makefile.mine` file to one of these values:
 * `dp`: Dual Priority scheduling.
 * `edf`: Earliest Deadline First scheduling.
 * `rm`: Rate Monotonic scheduling.
