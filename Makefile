@@ -22,7 +22,7 @@ FREERTOS_VERSION ?= v9.0.0
 # - nucleo_f411re
 # - nucleo_f103rb
 # - STM32F4DISCOVERY
-BOARD ?= nucleo_f103rb
+BOARD ?= lpc1768
 
 MBED_LIB_PATH = ./mbed/$(BOARD)
 BIN_DIR = ./build
