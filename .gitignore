@@ -2,10 +2,15 @@
 .RHistory
 .project
 .cproject
+Makefile.mine
+
+build
+build/**
 
 *.zip
 *.tar.gz
 *.pdf
+*.launch
 
 *.o
 *.d
