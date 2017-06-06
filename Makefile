@@ -48,28 +48,10 @@ export AS CC CPP LD OBJCOPY SIZE BIN_DIR MBED_LIB_PATH PROJECT FREERTOS_VERSION 
 
 all: $(BOARD)
 
-lpc1768:
+$(BOARD):
+	+@echo "Target board: $(BOARD)"
+	@$(MAKE) -f Makefile_$(BOARD).mk
+	
+clean:
 	@echo "Target board: lpc1768"
-	@$(MAKE) -f Makefile_LPC1768.mk
-	
-lpc1768_clean:
-	@echo "Target board: lpc1768"
-	@$(MAKE) -f Makefile_LPC1768.mk clean
-	
-nucleo_f103rb:
-	@echo "Target board: nucleo_f103rb"
-	@$(MAKE) -f Makefile_nucleo_f103rb.mk
-	
-nucleo_f103rb_clean:
-	@echo "Target board: nucleo_f103rb"
-	@$(MAKE) -f Makefile_nucleo_f103rb.mk clean
-	
-nucleo_f411re:
-	@echo "Target board: nucleo_f411re"
-	@$(MAKE) -f Makefile_nucleo_f411re.mk
-	
-nucleo_f411re_clean:
-	@echo "Target board: nucleo_f411re"
-	@$(MAKE) -f Makefile_nucleo_f411re.mk clean
-		
-clean: $(BOARD)_clean
+	@$(MAKE) -f Makefile_$(BOARD).mk clean
