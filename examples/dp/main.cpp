@@ -187,17 +187,18 @@ extern void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickC
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
-	pc.printf( "Dual Priority\n" );
-	pc.printf( "Setup -- %d --", xTaskGetTickCount() );
+	pc.printf( "Dual Priority (DP)\n" );
+	pc.printf( "Promotion times: ");
 
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
 	// Print slack values for the critical instant.
 	while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
-		struct TaskInfo_DP * dp = ( struct TaskInfo_DP * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
+		TaskDp_t * dp = ( TaskDp_t * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
 		if( dp != NULL )
 		{
 			pc.printf( "%d\t" , dp->xPromotion );

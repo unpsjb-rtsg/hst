@@ -140,6 +140,7 @@ void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickCount )
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
 	pc.printf("Earliest Deadline First (EDF)\n");

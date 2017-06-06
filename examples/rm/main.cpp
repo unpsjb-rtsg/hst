@@ -140,8 +140,9 @@ extern void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickC
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
-	pc.printf("Rate Monotonic Scheduling\n");
+	pc.printf("Rate Monotonic Scheduling (RMS)\n");
 }
 #endif
