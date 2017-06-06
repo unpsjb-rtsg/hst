@@ -96,7 +96,6 @@ BaseType_t vSchedulerTaskSchedulerTickLogic()
 		/* A NRTT is using Available Slack -- decrement all slack counters, and
 		 * increment the current aperiodic task executed time. */
 		vSlackDecrementAllTasksSlack( ONE_TICK );
-		HstTCB_t * pxAperiodicTask = ( HstTCB_t * ) listGET_OWNER_OF_HEAD_ENTRY( pxAperiodicReadyTasksList );
 	}
 	else
 	{
