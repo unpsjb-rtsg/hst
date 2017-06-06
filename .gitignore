@@ -2,6 +2,7 @@
 .RHistory
 .project
 .cproject
+Makefile.mine
 
 build
 build/**
