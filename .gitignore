@@ -20,4 +20,8 @@ build/**
 *.xml
 *.swp
 
+# mbed object files and libraries should be versioned
+!mbed/**/*.o
+!mbed/**/*.a
+
 .settings/**
