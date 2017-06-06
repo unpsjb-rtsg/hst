@@ -11,8 +11,11 @@ BIN_DIR = ./build
 
 ###############################################################################
 PROJECT = hst
-FREERTOS_OBJECTS = ./FreeRTOS/$(FREERTOS_VERSION)/tasks.o ./FreeRTOS/$(FREERTOS_VERSION)/queue.o ./FreeRTOS/$(FREERTOS_VERSION)/list.o ./FreeRTOS/$(FREERTOS_VERSION)/portable/MemMang/heap_1.o
 
+FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/tasks.o
+FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/queue.o
+FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/list.o
+FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/portable/MemMang/heap_1.o
 ifeq ($(BOARD), lpc1768)
 FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3/port.o
 endif
@@ -23,16 +26,32 @@ ifeq ($(BOARD), nucleo_f411re)
 FREERTOS_OBJECTS += ./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM4F/port.o
 endif
 
-HST_OBJECTS = ./hst/$(HST_SCHED)/scheduler_logic_$(HST_SCHED).o ./hst/scheduler.o ./hst/wcrt.o
-EXAMPLE_OBJECTS = ./examples/$(HST_SCHED)/main.o ./examples/utils/utils.o
-OBJECTS = $(FREERTOS_OBJECTS) $(HST_OBJECTS) $(EXAMPLE_OBJECTS)
+HST_OBJECTS += ./hst/$(HST_SCHED)/scheduler_logic_$(HST_SCHED).o 
+HST_OBJECTS += ./hst/scheduler.o
+HST_OBJECTS += ./hst/wcrt.o
 ifeq ($(HST_SCHED), ss)
-	OBJECTS += ./hst/$(HST_SCHED)/slack.o
+HST_OBJECTS += ./hst/$(HST_SCHED)/slack.o
 endif
 
-FREERTOS_INCLUDE_PATHS = -I./FreeRTOS/$(FREERTOS_VERSION)/include -I./FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3 -I./FreeRTOS/$(FREERTOS_VERSION)/config
-HST_INCLUDE_PATHS = -I./hst -I./hst/$(HST_SCHED)
-EXAMPLE_INCLUDE_PATHS = -I./examples/utils
+EXAMPLE_OBJECTS += ./examples/$(HST_SCHED)/main.o 
+EXAMPLE_OBJECTS += ./examples/utils/utils.o
+
+OBJECTS = $(FREERTOS_OBJECTS) $(HST_OBJECTS) $(EXAMPLE_OBJECTS)
+
+FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/config
+FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/include
+ifeq ($(BOARD), lpc1768)
+FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3
+endif
+ifeq ($(BOARD), nucleo_f103rb)
+FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM3
+endif
+ifeq ($(BOARD), nucleo_f411re)
+FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM4F
+endif
+HST_INCLUDE_PATHS += -I../hst 
+HST_INCLUDE_PATHS += -I../hst/$(HST_SCHED)
+EXAMPLE_INCLUDE_PATHS = -I../examples/utils
 
 ############################################################################### 
 GCC_BIN = 
