@@ -9,6 +9,7 @@ build/**
 *.zip
 *.tar.gz
 *.pdf
+*.launch
 
 *.o
 *.d
