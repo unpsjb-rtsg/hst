@@ -6,7 +6,6 @@ void vUtilsEatCpu( UBaseType_t ticks )
 {
 	BaseType_t xI;
 
-    //BaseType_t xLim = ( ticks * ONE_TICK ) / 5;
 	BaseType_t xLim = ( ticks * ONE_TICK ) / 20;
 
 	for( xI = 0; xI < xLim; xI++ )
