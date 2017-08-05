@@ -7,7 +7,7 @@
 -include Makefile.mine
 
 MBED_LIB_PATH = ./mbed/$(BOARD)
-BIN_DIR = ./build
+BUILD_DIR = ./build
 
 ###############################################################################
 PROJECT = hst
@@ -49,8 +49,10 @@ endif
 ifeq ($(BOARD), nucleo_f411re)
 FREERTOS_INCLUDE_PATHS += -I../FreeRTOS/$(FREERTOS_VERSION)/portable/GCC/ARM_CM4F
 endif
+
 HST_INCLUDE_PATHS += -I../hst 
 HST_INCLUDE_PATHS += -I../hst/$(HST_SCHED)
+
 EXAMPLE_INCLUDE_PATHS = -I../examples/utils
 
 ############################################################################### 
@@ -63,7 +65,7 @@ OBJCOPY = $(GCC_BIN)arm-none-eabi-objcopy
 OBJDUMP = $(GCC_BIN)arm-none-eabi-objdump
 SIZE 	= $(GCC_BIN)arm-none-eabi-size
 
-export AS CC CPP LD OBJCOPY SIZE BIN_DIR MBED_LIB_PATH PROJECT FREERTOS_VERSION FREERTOS_OBJECTS HST_OBJECTS EXAMPLE_OBJECTS OBJECTS FREERTOS_INCLUDE_PATHS HST_INCLUDE_PATHS EXAMPLE_INCLUDE_PATHS
+export AS CC CPP LD OBJCOPY SIZE BUILD_DIR MBED_LIB_PATH PROJECT FREERTOS_VERSION FREERTOS_OBJECTS HST_OBJECTS EXAMPLE_OBJECTS OBJECTS FREERTOS_INCLUDE_PATHS HST_INCLUDE_PATHS EXAMPLE_INCLUDE_PATHS
 
 all: $(BOARD)
 
@@ -72,5 +74,5 @@ $(BOARD):
 	@$(MAKE) -f Makefile_$(BOARD).mk
 	
 clean:
-	@echo "Target board: lpc1768"
+	@echo "Target board: $(BOARD)"
 	@$(MAKE) -f Makefile_$(BOARD).mk clean
