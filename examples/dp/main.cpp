@@ -102,7 +102,7 @@ static void aperiodic_task_body( void* params )
 	for (;;)
 	{
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
+		pc.printf( "%d\t%s\tS\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
 		xTaskResumeAll();
 
 		vUtilsEatCpu( 1000 );
@@ -111,7 +111,7 @@ static void aperiodic_task_body( void* params )
 		xRandomDelay = ( ( rand() % AP_MAX_DELAY ) + 3 ) * 1000;
 
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
+		pc.printf( "%d\t%s\tE\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
 		xTaskResumeAll();
 
 		/* The HST scheduler will execute the task if there is enough slack available. */
