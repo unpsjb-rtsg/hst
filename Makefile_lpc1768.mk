@@ -124,7 +124,7 @@ $(PROJECT).hex: $(PROJECT).elf
 	$(ELF2BIN) -O ihex $< $@
 	
 clean:
-	rm -f $(BIN_DIR)/$(PROJECT).bin $(BIN_DIR)/$(PROJECT).elf $(BIN_DIR)/$(PROJECT).hex $(BIN_DIR)/$(PROJECT).map $(BIN_DIR)/$(PROJECT).lst $(OBJECTS) $(DEPS)
+	rm -f $(BUILD_DIR)/$(PROJECT).bin $(BUILD_DIR)/$(PROJECT).elf $(BUILD_DIR)/$(PROJECT).hex $(BUILD_DIR)/$(PROJECT).map $(BUILD_DIR)/$(PROJECT).lst $(OBJECTS) $(DEPS)
 
 # Rules
 ###############################################################################
