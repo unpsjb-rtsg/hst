@@ -3,7 +3,9 @@
 #define TASK_SCHEDULER_PRIORITY ( configMAX_PRIORITIES - 1 )
 #define TASK_PRIORITY 			( configMAX_PRIORITIES - 2 )
 
-/* Task types. */
+/**
+ *  Task types.
+ */
 typedef enum 
 {
 	HST_PERIODIC,
@@ -12,16 +14,20 @@ typedef enum
 	HST_NONE
 } HstTaskType_t;
 
-/* Task states for the HST. */
+/**
+ * Task states for the HST.
+ */
 typedef enum
 {
-	HST_READY,
-	HST_SUSPENDED,
-	HST_BLOCKED,
-	HST_FINISHED
+	HST_READY,    //!< HST_READY
+	HST_SUSPENDED,//!< HST_SUSPENDED
+	HST_BLOCKED,  //!< HST_BLOCKED
+	HST_FINISHED  //!< HST_FINISHED
 } HstTaskState_t;
 
-/* Periodic task TCB for application scheduler. */
+/**
+ * Periodic task TCB for application scheduler.
+ */
 struct HstTCB
 {
 	TaskHandle_t xHandle;	     /* FreeRTOS task reference. */
@@ -62,13 +68,27 @@ typedef struct HstTCB HstTCB_t;
 extern "C" {
 #endif
 
-/* Trace blocking and suspended tasks. */
+/**
+ * Trace blocking and suspended tasks.
+ */
 void vSchedulerTaskDelay( void );
 
+/**
+ *
+ * @param pxTask
+ */
 void vSchedulerTaskReady( void *pxTask );
 
+/**
+ *
+ * @param pxResource
+ */
 void vSchedulerTaskBlock( void *pxResource );
 
+/**
+ *
+ * @param pxTask
+ */
 void vSchedulerTaskSuspend( void *pxTask );
 
 /**
@@ -99,18 +119,44 @@ void vSchedulerWaitForNextPeriod( void );
 
 /* --- AppSched_Logic -------------------------------------------------- */
 
+/**
+ *
+ */
 void vSchedulerLogicSetup( void );
 
+/**
+ *
+ */
 void vSchedulerTaskSchedulerStartLogic( void );
 
+/**
+ *
+ * @param xTask
+ */
 void vSchedulerLogicAddTask( HstTCB_t *xTask );
 
+/**
+ *
+ * @param xTask
+ */
 void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask );
 
+/**
+ *
+ * @param xTask
+ */
 void vSchedulerLogicRemoveTaskFromReadyList( HstTCB_t *xTask );
 
+/**
+ *
+ * @param xCurrentTask
+ */
 void vSchedulerTaskSchedulerLogic( HstTCB_t **xCurrentTask );
 
+/**
+ *
+ * @return
+ */
 BaseType_t vSchedulerTaskSchedulerTickLogic( void );
 
 /* --------------------------------------------------------------------- */
