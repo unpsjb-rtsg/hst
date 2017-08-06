@@ -58,3 +58,5 @@ Makefile.mine
 
 # build directory
 build
+out
+
