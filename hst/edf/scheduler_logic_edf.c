@@ -42,7 +42,7 @@ void vSchedulerTaskSchedulerLogic( HstTCB_t **pxCurrentTask )
  */
 void vSchedulerLogicAddTaskToReadyList( HstTCB_t *xTask )
 {
-	listSET_LIST_ITEM_VALUE( &( xTask->xReadyListItem ), xTask->xAbsolutDeadline );
+	listSET_LIST_ITEM_VALUE( &( xTask->xReadyListItem ), xTask->xDeadline );
 	vListInsert( pxReadyTasksList, &( xTask->xReadyListItem ) );
 }
 

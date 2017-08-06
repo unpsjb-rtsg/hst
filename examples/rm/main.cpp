@@ -71,7 +71,7 @@ static void task_body( void* params )
 		vSchedulerWaitForNextPeriod();
 	}
 
-	/* If the tasks ever leaves the for cycle, kill it. */
+	/* If the tasks ever leaves the for loop, kill it. */
 	vTaskDelete( NULL );
 }
 
@@ -109,7 +109,7 @@ extern void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTick
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsoluteDeadline );
 
 	DigitalOut led( LED4 );
 
@@ -140,8 +140,9 @@ extern void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickC
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
-	pc.printf("Rate Monotonic Scheduling\n");
+	pc.printf("Rate Monotonic Scheduling (RMS)\n");
 }
 #endif

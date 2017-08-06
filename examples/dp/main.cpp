@@ -102,7 +102,7 @@ static void aperiodic_task_body( void* params )
 	for (;;)
 	{
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tSTART\t\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
+		pc.printf( "%d\t%s\tS\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
 		xTaskResumeAll();
 
 		vUtilsEatCpu( 1000 );
@@ -111,12 +111,15 @@ static void aperiodic_task_body( void* params )
 		xRandomDelay = ( ( rand() % AP_MAX_DELAY ) + 3 ) * 1000;
 
 		vTaskSuspendAll();
-		pc.printf( "%d\t\t%s\tEND  \t\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
+		pc.printf( "%d\t%s\tE\t%d\t%d\tM\n", xTaskGetTickCount(), pcTaskName, pxTaskInfo->uxReleaseCount, pxTaskInfo->xCur );
 		xTaskResumeAll();
 
 		/* The HST scheduler will execute the task if there is enough slack available. */
 		vTaskDelay( xRandomDelay );
 	}
+
+	/* If the tasks ever leaves the for loop, kill it. */
+	vTaskDelete( NULL );
 }
 
 extern void vApplicationMallocFailedHook( void )
@@ -153,7 +156,7 @@ extern void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTick
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsoluteDeadline );
 
 	DigitalOut led( LED4 );
 
@@ -184,17 +187,18 @@ extern void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickC
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
-	pc.printf( "Dual Priority\n" );
-	pc.printf( "Setup -- %d --", xTaskGetTickCount() );
+	pc.printf( "Dual Priority (DP)\n" );
+	pc.printf( "Promotion times: ");
 
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
 	// Print slack values for the critical instant.
 	while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
-		struct TaskInfo_DP * dp = ( struct TaskInfo_DP * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
+		TaskDp_t * dp = ( TaskDp_t * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
 		if( dp != NULL )
 		{
 			pc.printf( "%d\t" , dp->xPromotion );

@@ -79,7 +79,7 @@ static void task_body( void* params )
 		vSchedulerWaitForNextPeriod();
 	}
 
-	// If the tasks ever leaves the for cycle, kill it.
+	// If the tasks ever leaves the for loop, kill it.
 	vTaskDelete( NULL );
 }
 
@@ -106,7 +106,7 @@ static void aperiodic_task_body( void* params )
 		vTaskDelay( xRandomDelay );
 	}
 
-	// If the tasks ever leaves the for cycle, kill it.
+	// If the tasks ever leaves the for loop, kill it.
 	vTaskDelete( NULL );
 }
 
@@ -165,7 +165,7 @@ void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTickCount )
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTickCount, xTask->xAbsoluteDeadline );
 
 	DigitalOut led( LED4 );
 
@@ -213,17 +213,18 @@ void vSchedulerWcetOverrunHook( HstTCB_t * xTask, const TickType_t xTickCount )
 }
 
 #if ( configUSE_SCHEDULER_START_HOOK == 1 )
+/* This function is invoked before RTOS scheduler is started. */
 extern void vSchedulerStartHook()
 {
-	pc.printf("Rate Monotonic + Slack Stealing\n");
-	pc.printf( "\nSetup -- %d\t -- \t%d\t", xTaskGetTickCount(), xAvailableSlack );
+	pc.printf( "Rate Monotonic + Slack Stealing (RM+SS)\n" );
+	pc.printf( "Slacks -- %d\t", xAvailableSlack );
 
 	ListItem_t * pxAppTasksListItem = listGET_HEAD_ENTRY( pxAllTasksList );
 
 	// Print slack values for the critical instant.
 	while( listGET_END_MARKER( pxAllTasksList ) != pxAppTasksListItem )
 	{
-		struct TaskInfo_Slack * s = ( struct TaskInfo_Slack * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
+		TaskSs_t * s = ( TaskSs_t * ) ( ( HstTCB_t * ) listGET_LIST_ITEM_OWNER( pxAppTasksListItem ) )->vExt;
 		pc.printf( "%d\t" , s->xSlack );
 		pxAppTasksListItem = listGET_NEXT( pxAppTasksListItem );
 	}

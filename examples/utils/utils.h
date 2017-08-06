@@ -7,6 +7,10 @@
 extern "C" {
 #endif
 
+/**
+ *
+ * @param ticks
+ */
 void vUtilsEatCpu( UBaseType_t ticks );
 
 #if defined (__cplusplus)

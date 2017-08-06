@@ -1,18 +1,62 @@
-.RData
-.RHistory
+# Object files
+*.o
+*.ko
+*.obj
+*.elf
+*.bin
+*.pyc
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Libraries
+*.lib
+*.a
+*.la
+*.lo
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+
+# Makefile objects
+*.d
+
+# Eclipse project files and directories
 .project
 .cproject
+.settings
+language.settings.xml
+*.launch
 
-*.zip
-*.tar.gz
+# Other
 *.pdf
+*.rhistory
+Makefile.mine
 
-*.o
-*.d
-*.bin
-*.elf
-*.a
-*.xml
-*.swp
+# mbed object files and libraries should be versioned
+!mbed/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/*.o
+!mbed/lpc1768/TARGET_LPC1768/TOOLCHAIN_GCC_ARM/*.a
+!mbed/nucleo_f103rb/TARGET_NUCLEO_F103RB/TOOLCHAIN_GCC_ARM/*.a
+!mbed/nucleo_f103rb/TARGET_NUCLEO_F103RB/TOOLCHAIN_GCC_ARM/*.a
+!mbed/nucleo_f411re/TARGET_NUCLEO_F411RE/TOOLCHAIN_GCC_ARM/*.a
+!mbed/nucleo_f411re/TARGET_NUCLEO_F411RE/TOOLCHAIN_GCC_ARM/*.a
 
-.settings/**
+# build directory
+build
+out
+
