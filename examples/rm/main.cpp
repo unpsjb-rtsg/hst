@@ -109,7 +109,7 @@ extern void vSchedulerDeadlineMissHook( HstTCB_t * xTask, const TickType_t xTick
 {
 	taskDISABLE_INTERRUPTS();
 
-	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsolutDeadline );
+	pc.printf( "Task %s (%d) missed its deadline: %d - %d\n", pcTaskGetTaskName( xTask->xHandle ), xTask->uxReleaseCount, xTickCount, xTask->xAbsoluteDeadline );
 
 	DigitalOut led( LED4 );
 

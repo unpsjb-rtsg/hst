@@ -38,11 +38,11 @@ struct HstTCB
 	ListItem_t xAbsDeadlineListItem; /* Points to the HST absolute dealine list. */
 
 	// ----------------------
-	UBaseType_t xPriority;	     /* Priority. */
-	TickType_t xPeriod;		     /* Period. */
-	TickType_t xDeadline;        /* Relative deadline. */
-	TickType_t xAbsolutDeadline; /* Absolute deadline of the current release. */
-	TickType_t xRelease;	     /* Most recent task release absolute time. */
+	UBaseType_t xPriority;	      /* Priority. */
+	TickType_t xPeriod;		      /* Period. */
+	TickType_t xDeadline;         /* Relative deadline. */
+	TickType_t xAbsoluteDeadline; /* Absolute deadline of the current release. */
+	TickType_t xRelease;	      /* Most recent task release absolute time. */
 
 	// ----------------------
 	TickType_t xWcet;		     /* Worst case execution time. */

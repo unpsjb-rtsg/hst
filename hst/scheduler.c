@@ -80,7 +80,7 @@ BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const p
 		pxTaskHstTCB->xPriority = uxPriority;
 		pxTaskHstTCB->xPeriod = xPeriod;
 		pxTaskHstTCB->xDeadline = xDeadline;
-		pxTaskHstTCB->xAbsolutDeadline = xDeadline;
+		pxTaskHstTCB->xAbsoluteDeadline = xDeadline;
 		pxTaskHstTCB->xRelease = 0;
 		pxTaskHstTCB->xWcet = xWcet;
 		pxTaskHstTCB->xWcrt = 0;
@@ -110,7 +110,7 @@ BaseType_t xSchedulerTaskCreate( TaskFunction_t pxTaskCode, const char * const p
 			{
 		        vListInitialiseItem( &( pxTaskHstTCB->xAbsDeadlineListItem ) );
 		        listSET_LIST_ITEM_OWNER( &( pxTaskHstTCB->xAbsDeadlineListItem ), pxTaskHstTCB );
-		        listSET_LIST_ITEM_VALUE( &( pxTaskHstTCB->xAbsDeadlineListItem ), pxTaskHstTCB->xAbsolutDeadline );
+		        listSET_LIST_ITEM_VALUE( &( pxTaskHstTCB->xAbsDeadlineListItem ), pxTaskHstTCB->xAbsoluteDeadline );
 		        vListInsert( &xAbsDeadlinesList, &( pxTaskHstTCB->xAbsDeadlineListItem ) );
 			}
 
@@ -258,7 +258,7 @@ static void prvSchedulerTaskScheduler( void* params )
 				 */
 				if( pxAppTask->xState == HST_FINISHED )
 				{
-					pxAppTask->xAbsolutDeadline = pxAppTask->xRelease + pxAppTask->xDeadline;
+					pxAppTask->xAbsoluteDeadline = pxAppTask->xRelease + pxAppTask->xDeadline;
 					pxAppTask->uxReleaseCount = pxAppTask->uxReleaseCount + 1;
 					pxAppTask->xState = HST_READY;
 					pxAppTask->xCur = 0;
@@ -268,7 +268,7 @@ static void prvSchedulerTaskScheduler( void* params )
 						/* Add task's absolute deadline into deadlines list. */
 						if( listIS_CONTAINED_WITHIN( &xAbsDeadlinesList, &( pxAppTask->xAbsDeadlineListItem ) ) == pdFALSE )
 						{
-							listSET_LIST_ITEM_VALUE( &( pxAppTask->xAbsDeadlineListItem ), pxAppTask->xAbsolutDeadline );
+							listSET_LIST_ITEM_VALUE( &( pxAppTask->xAbsDeadlineListItem ), pxAppTask->xAbsoluteDeadline );
 							vListInsert( &xAbsDeadlinesList, &( pxAppTask->xAbsDeadlineListItem ) );
 						}
 					}
